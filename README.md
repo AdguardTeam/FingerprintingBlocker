@@ -1,0 +1,2 @@
+# FingerprintingBlocker
+Fingerprinting blocker extension
