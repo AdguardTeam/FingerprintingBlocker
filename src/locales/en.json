@@ -1,0 +1,5 @@
+{
+    "popup_whitelist_domain": {
+        "message": "Whitelist fingerprinting blocker in the current page?"
+    }
+}

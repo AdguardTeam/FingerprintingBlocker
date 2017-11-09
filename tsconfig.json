@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "lib": ["dom", "es6", "es2017.sharedmemory"],
+        "jsx": "react",
+        "jsxFactory": "h",
+        "allowJs": true        
+    },
+    "include": [
+        "src/**/*"
+    ]
+}
