@@ -30,7 +30,7 @@ function main (window:Window) {
     new InterContextMessageHub(window);
 
     const canvasApiWrapper      = new CanvasApiWrapper(proxyService, storage, canvasProcessor, notifier);
-    
+
     canvasApiWrapper.$apply(window);
 }
 

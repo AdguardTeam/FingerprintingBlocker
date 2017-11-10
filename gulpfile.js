@@ -134,7 +134,7 @@ gulp.task('beta',
         options["CHANNEL"] = 'Beta';
         options["CC_OPTIONS"] = opts_cc.tscc;
         options["UGLIFY_OPTIONS"] = opts_uglify.asm_safe;
-        runSequence('clean', 'tsickle', 'tscc'/*, 'tscc-clean'*/, 'append-asm', 'uglify', 'meta', done);
+        runSequence('clean', 'tsickle', 'tscc'/*, 'tscc-clean'*/, 'append-asm'/*, 'uglify'*/, 'meta', done);
     }
 );
 
@@ -143,7 +143,7 @@ gulp.task('release',
         options["CHANNEL"] = 'Release';
         options["CC_OPTIONS"] = opts_cc.tscc;
         options["UGLIFY_OPTIONS"] = opts_uglify.asm_safe;
-        runSequence('clean', 'tsickle', 'tscc', 'tscc-clean', 'append-asm', 'uglify', 'meta', done);
+        runSequence('clean', 'tsickle', 'tscc', 'tscc-clean', 'append-asm'/*, 'uglify'*/, 'meta', done);
     }
 );
 

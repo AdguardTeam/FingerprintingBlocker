@@ -4,8 +4,6 @@ import IAlertData from '../ui/alerts/IAlertData';
 import IAlertController from '../ui/alerts/IAlertController';
 import IInterContextMessageHub from '../messaging/IInterContextMessageHub';
 
-import { getSafeNonEmptyParent } from '../shared/dom';
-
 import AlertData from '../ui/alerts/AlertData';
 
 import TBlockEvent from '../event/BlockEvent';

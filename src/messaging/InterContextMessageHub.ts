@@ -1,5 +1,4 @@
 import IInterContextMessageHub from './IInterContextMessageHub';
-import { getSafeNonEmptyParent } from '../shared/dom';
 
 export default class InterContextMessageHub implements IInterContextMessageHub {
     public supported:boolean
