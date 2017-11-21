@@ -11,5 +11,5 @@ module.exports = () => {
         .pipe(insert.transform(insertResource))
         .pipe(rollup(require('./options/rollup').test))
         .pipe(rename('index.js'))
-        .pipe(gulp.dest('./tests/build'));
+        .pipe(gulp.dest('./test/build'));
 };
