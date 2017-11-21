@@ -6,14 +6,13 @@ import INotifier from '../../notifier/INotifier';
 
 import BlockEvent, { Apis, Action, CanvasBlockEvent, CanvasBlockEventType } from '../../event/BlockEvent';
 
+import TypeGuards from '../../shared/TypeGuards';
+
 import { crop } from './CanvasProcessor';
 import WeakMap from '../../third-party/weakmap';
 
 export default class CanvasApiWrapper implements ICanvasApiWrapper {
 
-    /**
-     * Canvases 
-     */
     private static MIN_CANVAS_SIZE_TO_FAKE = 128;
 
     private canvasContextMap:IWeakMap<HTMLCanvasElement, TCanvasMode>
@@ -41,7 +40,6 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
         if (contextType) {
             const {data, result} = this.canvasProcessor.clone2DCanvasWithNoise(__this, contextType);
             if (result) {
-
                 // this.notifier.onBlocked('Faked HTMLCanvasElement method');
             }
             __this = data;
@@ -50,26 +48,54 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
     };
 
     private anonymizeImageDataAccess:ApplyHandler<CanvasRenderingContext2D,ImageData> = (orig, __this:CanvasRenderingContext2D, _arguments):ImageData => {
-        const sx = _arguments[0];
-        const sy = _arguments[1];
-        const sw = _arguments[2];
-        const sh = _arguments[3];
-        const origWidth = __this.canvas.width;
-        const origHeight = __this.canvas.height;
+        const sx:number = _arguments[0];
+        const sy:number = _arguments[1];
+        const sw:number = _arguments[2];
+        const sh:number = _arguments[3];
+        const origWidth:number = __this.canvas.width;
+        const origHeight:number = __this.canvas.height;
         // Noiser requires +-1 more pixels for each of 4 directions to deterministically apply noises.
         let tempImageData:ImageData = orig.apply(__this, [sx - 1, sy - 1, sw + 2, sh + 2]);
-        const {data, result} = this.canvasProcessor.addNoiseToBitmap(tempImageData.data, sx - 1, sy - 1, sw + 2, sh + 2, origWidth, origHeight);
+        const {data, result} = this.canvasProcessor.addNoiseToBitmap((buffView) => { buffView.set(tempImageData.data); }, sx - 1, sy - 1, sw + 2, sh + 2, origWidth, origHeight);
 
         let imageData = new ImageData(sw, sh);
 
-        // Convert dimension of obtained imageData.
-        crop(tempImageData.data, 1, 1, sw, sh, sw + 1, sh + 1, data);
+        // Convert dimension of the obtained imageData.
+        crop(data, 1, 1, sw, sh, sw + 2, sh + 2, imageData.data);
         return imageData;
     }
 
-    private anonymizeWebGLRenderingContextMethods:ApplyHandler<WebGLRenderingContext|WebGL2RenderingContext, void> = (orig, __this, _arguments) => {
-        console.log('called WebGL(2)RenderingContext#readPixels, intercepting it is not implementd yet.');
-        orig.apply(__this, _arguments);
+    private anonymizeWebGLReadPixels:ApplyHandler<WebGLRenderingContext|WebGL2RenderingContext, void> = (orig, __this, _arguments) => {
+        const sx:number = _arguments[0];
+        const sy:number = _arguments[1];
+        const sw:number = _arguments[2];
+        const sh:number = _arguments[3];
+        const format = _arguments[4];
+        const type:number = _arguments[5];
+        const pixels:ArrayBufferView = _arguments[6];
+
+        const origWidth:number = __this.canvas.width;
+        const origHeight:number = __this.canvas.height;
+
+        switch(type) {
+            case __this.UNSIGNED_BYTE: {
+                if (TypeGuards.isUint8Array(pixels)) {
+                    const writeToProcessorBuff = (buffView) => {
+                        orig.call(__this, sx - 1, sy - 1, sw + 2, sh + 2, format, type, buffView);
+                    }
+                    const {data, result} = this.canvasProcessor.addNoiseToBitmap(writeToProcessorBuff, sx - 1, sy - 1, sw + 2, sh + 2, origWidth, origHeight);
+
+                    crop(data, 1, 1, sw, sh, sw + 2, sh + 2, pixels);
+                    return;
+                }
+            }
+            case __this.UNSIGNED_SHORT_5_6_5:
+            case __this.UNSIGNED_SHORT_5_5_5_1:
+            case __this.UNSIGNED_SHORT_4_4_4_4:
+                console.log('called WebGL(2)RenderingContext#readPixels with a type whose faking is not supported.');
+            default:
+                return orig.apply(__this, _arguments);
+        }      
     }
 
     /**
@@ -187,7 +213,7 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
                 'readPixels',
                 this.applyHandlerFactory<WebGLRenderingContext,void>(
                     CanvasBlockEventType.READ_PIXELS,
-                    this.anonymizeWebGLRenderingContextMethods,
+                    this.anonymizeWebGLReadPixels,
                     CanvasApiWrapper.returnNull,
                     CanvasApiWrapper.canvasFromContext,
                     domain
@@ -202,7 +228,7 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
                 'readPixels',
                 this.applyHandlerFactory<WebGL2RenderingContext,void>(
                     CanvasBlockEventType.READ_PIXELS_2,
-                    this.anonymizeWebGLRenderingContextMethods,
+                    this.anonymizeWebGLReadPixels,
                     CanvasApiWrapper.returnNull,
                     CanvasApiWrapper.canvasFromContext,
                     domain
@@ -212,8 +238,6 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
 
         // Unlike usual canvas, offscreen canvas can be used in worker
         const offscreenCanvas = window.OffscreenCanvas;
-
-
     }
 
     constructor(

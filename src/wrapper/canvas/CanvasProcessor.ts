@@ -26,32 +26,25 @@ function nextValidHeapSize(realSize:number) {
 }
 
 export function crop(data:Uint8Array|Uint8ClampedArray, x:number, y:number, w:number, h:number, orig_w:number, orig_h:number, translated:Uint8Array|Uint8ClampedArray):void {
-	for (let origOffset = (y * orig_w + x) << 2, targetOffset = 0,
-		counter = 0; counter < h; counter++,
-		origOffset += (orig_w << 2), targetOffset += (w << 2)
-	) { translated.set(data.subarray(origOffset, origOffset + (w << 2)), targetOffset); }
+	for (let origOffset = (y * orig_w + x) << 2, targetOffset = 0, counter = 0;
+		counter < h;
+		counter++, origOffset += (orig_w << 2), targetOffset += (w << 2) ) {
+		translated.set(data.subarray(origOffset, origOffset + (w << 2)), targetOffset);
+	}
 }
 
 export default class CanvasProcessor implements ICanvasProcessor {
-    private cache:{ [id:string]:HTMLCanvasElement }
-
-	private static readonly HASH_SIZE 		 = 1 << 4;
-	private static readonly META_BUFFER_SIZE = 10;
-	private static readonly DATA_OFFSET 	 = 41;
+	
+	private static DATA_OFFSET = 0;
 
 	private buffer:ArrayBuffer
 	private bufferBytesLength:number
 
-	private metaBuffer32:Int32Array
-	private resultBuffer8:Uint8Array
-
 	private data8:Uint8Array
-	
+
 	private noiseApplyer2D:INoiseApplyer
 
-    constructor(private options:IStorageProvider) {
-		this.cache = Object.create(null);
-
+    constructor(private options:IStorageProvider, private $window:Window) {
 		// Stores native methods here, which will be overridden later.
 		this.getContext = HTMLCanvasElement.prototype.getContext;
 		this.getImageData = CanvasRenderingContext2D.prototype.getImageData;
@@ -66,48 +59,51 @@ export default class CanvasProcessor implements ICanvasProcessor {
 
 	private initialize2DNoiser(size?:number) {
 		let bufferSize = nextValidHeapSize(size);
+		// Grow buffer size if needed.
 		if (!this.buffer || size > this.bufferBytesLength) {
 			this.buffer = new ArrayBuffer(bufferSize);
 			this.bufferBytesLength = bufferSize;
+			this.data8 = new Uint8Array(this.buffer);
 
-			this.metaBuffer32 = new Int32Array(this.buffer, 0, CanvasProcessor.META_BUFFER_SIZE);
-			this.resultBuffer8 = new Uint8Array(this.buffer, CanvasProcessor.DATA_OFFSET - 1, 1);
-			this.data8 = new Uint8Array(this.buffer, CanvasProcessor.DATA_OFFSET);
-
-			this.noiseApplyer2D = noiseApplyerModule2D(window, null, this.buffer);
-
-			this.options.fillDomainHash(new Uint8Array(this.buffer, 0, CanvasProcessor.HASH_SIZE))
+			// IE does not support Math.imul, which is required by noise applier.
+			if (typeof this.$window.Math.imul !== 'function') {
+				this.$window.Math.imul = imul;
+			}
+			this.noiseApplyer2D = noiseApplyerModule2D(this.$window, null, this.buffer);
 		}
 	}
 	/**
 	 * Beware: this does _not_ apply noise to pixels on 4 borders.
 	 */
 	addNoiseToBitmap(
-		data		:Uint8Array|Uint8ClampedArray,
+		writeBuffCb :(buffView:Uint8Array)=>void,
 		sx			:number, // x-coord in which `data` is extracted from
 		sy			:number, // y-coord in which `data` is extracted from
 		width		:number, // width of `data`
 		height		:number, // height of `data`
 		origWidth	:number, // width of a data from which `data` is extracted
 		origHeight	:number  // height of a data from which `data` is extracted
-	):IResult<Uint8ClampedArray> {
+	):IResult<Uint8Array> {
 		let dataSize = (width * height) << 2;
 		let bufferSize = dataSize + CanvasProcessor.DATA_OFFSET;
-	
+
 		this.initialize2DNoiser(bufferSize);
-	
-		this.data8.set(data);
-		this.metaBuffer32[4] = sx;
-		this.metaBuffer32[5] = sy;
-		this.metaBuffer32[6] = width;
-		this.metaBuffer32[7] = height;
-		this.metaBuffer32[8] = origWidth;
-		this.metaBuffer32[9] = origHeight;
-		this.noiseApplyer2D.a();
-		console.log("[FingerprintingBlocker]: total " + this.resultBuffer8[0] + " values have been modified.");
+
+		writeBuffCb(this.data8);
+
+		let h = this.options.getHashInInt32();
+
+		let start = performance.now();
+		let result = this.noiseApplyer2D._apply_noise(CanvasProcessor.DATA_OFFSET, sx, sy, width, height, origWidth, origHeight, h[0], h[1], h[2], h[3]);
+		let end = performance.now();
+		
+		console.log("[FingerprintingBlocker]: total " + result + " values have been modified.");
+		console.log(`Elapsed: ${end - start} ms.`);
+		console.log(`Canvas size was ${width} * ${height}`);
+
 		return {
-			data: new Uint8ClampedArray(this.buffer, CanvasProcessor.DATA_OFFSET, dataSize),
-			result: this.resultBuffer8[0] !== 0
+			data: new Uint8Array(this.buffer, CanvasProcessor.DATA_OFFSET, dataSize),
+			result: result //this.resultBuffer32[0]
 		};
 	}
 
@@ -131,24 +127,36 @@ export default class CanvasProcessor implements ICanvasProcessor {
 			context = this.getContext.call(cloned2dCanvas, '2d');
 			context.drawImage(canvas, 0, 0, w, h);
 		}
-		const imageData = this.getImageData.call(context, -1, -1, w + 2, h + 2);
+		const imageData:ImageData = this.getImageData.call(context, -1, -1, w + 2, h + 2);
 		const data = imageData.data;
 
-		const { data: noiseApplied, result } = this.addNoiseToBitmap(data, -1, -1, w + 2, h + 2, w, h);
+		const { data: noiseApplied, result } = this.addNoiseToBitmap((buffView)=>{ buffView.set(data) }, -1, -1, w + 2, h + 2, w, h);
 		if (result) {
 			imageData.data.set(noiseApplied);
 			cloned2dCanvas = cloned2dCanvas || document.createElement('canvas');
 			this.getContext.call(cloned2dCanvas, '2d').putImageData(imageData, 1, 1, 0, 0, w, h);
 			return {
 				data: cloned2dCanvas,
-				result: true
+				result: result
 			}
 		} else {
 			return {
-				data: canvas, 
-				result: false
+				data: canvas,
+				result: result
 			};
 		}
 	}
-
 }
+
+/**
+ * Polyfill of Math.imul for IE.
+ */
+function imul(a:number, b:number):number {
+	var ah = (a >>> 16) & 0xffff;
+	var al = a & 0xffff;
+	var bh = (b >>> 16) & 0xffff;
+	var bl = b & 0xffff;
+	// the shift by 0 fixes the sign on the high part
+	// the final |0 converts the unsigned value into a signed value
+	return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0)|0);
+};

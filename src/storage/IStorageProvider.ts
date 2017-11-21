@@ -6,7 +6,8 @@ export default interface IStorageProvider {
     confirm:boolean
     whitelisted:boolean
 
-    fillDomainHash(buffer:Uint8Array):void
+    getHashInInt32():Int32Array
+
     getCurrentStat():{canvas:number, audio:number}
     getTriggerLog():ITriggerLog
     appendEvent(evt:TBlockEvent):void

@@ -89,7 +89,7 @@ export default class AlertController implements IAlertController {
                 iframe.style[prop] = AlertController.BASE_IFRAME_STYLE[prop];
             }
 
-            document.body.appendChild(iframe);
+            document.documentElement.appendChild(iframe);
         }
     }
 
@@ -110,7 +110,7 @@ export default class AlertController implements IAlertController {
     }
 
     private destroy():void {
-        document.body.removeChild(this.iframe);
+        document.documentElement.removeChild(this.iframe);
         this.iframe = undefined;
         this.alertInstance = undefined;
     }

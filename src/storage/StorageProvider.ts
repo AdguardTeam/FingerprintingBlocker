@@ -75,8 +75,10 @@ export default class StorageProvider implements IStorageProvider {
         (window.crypto || window.msCrypto).getRandomValues(buffer);
         return base64.encode(buffer);
     }
-    fillDomainHash(buffer:Uint8Array):void {
-        base64.decode(this.hash, buffer);
+    getHashInInt32():Int32Array {
+        let ar = new ArrayBuffer(16);
+        base64.decode(this.hash, new Uint8Array(ar));
+        return new Int32Array(ar);
     }
     private updateGlobalSettings():void {
         GM_setValue(GLOBAL_SETTINGS_KEY, JSON.stringify(this.globalSettings));
@@ -115,7 +117,6 @@ export default class StorageProvider implements IStorageProvider {
         });
         GM_setValue(LOG_PREFIX + this.domain, JSON.stringify(triggerLog));
     }
-
     changeAction(action:Action):void {
         this.domainSettings.action = action;
         this.action = action;

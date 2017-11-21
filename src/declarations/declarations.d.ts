@@ -1,7 +1,3 @@
-
-
-//
-
 declare interface Window {
     HTMLCanvasElement: typeof HTMLCanvasElement
     HTMLIFrameElement: typeof HTMLIFrameElement
@@ -10,6 +6,7 @@ declare interface Window {
     WebGL2RenderingContext?:typeof WebGL2RenderingContext
     eval:typeof eval
     readonly msCrypto?:Crypto
+    readonly Math:typeof Math
 }
 
 // Workaround for [Symbol.toStringTag] requirement of TS

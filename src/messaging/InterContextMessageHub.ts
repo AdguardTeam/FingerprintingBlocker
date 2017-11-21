@@ -34,20 +34,25 @@ export default class InterContextMessageHub implements IInterContextMessageHub {
             // `MAGIC` indicates that this message is sent by the popupblocker from the child frame.
             return;
         }
-        if (typeof evt.source === 'undefined') {
-            // evt.source can be undefiend when an iframe has been removed from the document before the message is received.
-            return;
+        // From now on, propagation of event must be stopped.
+        receivePort: {
+            if (typeof evt.source === 'undefined') {
+                // evt.source can be undefiend when an iframe has been removed from the document before the message is received.
+                break receivePort;
+            }
+            if (this.framePortMap.has(evt.source)) {
+                // Such frames have already sent its message port, we do not accept additional ports.
+                console.log('Received a handshake from the already met frame.');
+                break receivePort;
+            }
+            // log.print('received a message from:', evt.source);
+            let port = evt.ports[0]; // This is a port that a child frame sent.
+            port.onmessage = (evt) => {
+                this.onMessage(evt);
+            };
+            this.framePortMap.set(evt.source, port);
         }
-        if (this.framePortMap.has(evt.source)) {
-            // Such frames have already sent its message port, we do not accept additional ports.
-            return;
-        }
-        // log.print('received a message from:', evt.source);
-        let port = evt.ports[0]; // This is a port that a child frame sent.
-        port.onmessage = (evt) => {
-            this.onMessage(evt);
-        };
-        this.framePortMap.set(evt.source, port);
+
         evt.stopImmediatePropagation();
         evt.preventDefault();
     }

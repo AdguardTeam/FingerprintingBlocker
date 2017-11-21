@@ -15,7 +15,7 @@ const KEY = Math.random().toString(36).substr(2);
 
 const storage           = new StorageProvider();
 
-const canvasProcessor   = new CanvasProcessor(storage);
+const canvasProcessor   = new CanvasProcessor(storage, window);
 
 const messageHub        = new InterContextMessageHub(window);
 const alertController   = new AlertController(storage);

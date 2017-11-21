@@ -104,7 +104,9 @@ gulp.task('clean',      require('./tasks/clean'));
 gulp.task('meta',       require('./tasks/meta'));
 gulp.task('rollup',     require('./tasks/rollup'));
 
-gulp.task('append-asm', require('./tasks/append-asm'));
+gulp.task('validate-asm', require('./tasks/asm/validate'));
+gulp.task('generate-asm', require('./tasks/asm/generate'));
+gulp.task('append-asm', require('./tasks/asm/append'));
 
 gulp.task('tsickle',    require('./tasks/tscc/tsickle'));
 gulp.task('tscc',       require('./tasks/tscc/tscc'));
@@ -134,7 +136,7 @@ gulp.task('beta',
         options["CHANNEL"] = 'Beta';
         options["CC_OPTIONS"] = opts_cc.tscc;
         options["UGLIFY_OPTIONS"] = opts_uglify.asm_safe;
-        runSequence('clean', 'tsickle', 'tscc'/*, 'tscc-clean'*/, 'append-asm'/*, 'uglify'*/, 'meta', done);
+        runSequence('clean', 'tsickle', 'tscc'/*, 'tscc-clean'*/, 'append-asm', 'uglify', 'meta', done);
     }
 );
 
