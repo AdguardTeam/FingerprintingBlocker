@@ -15,7 +15,7 @@ const rollup_options = {
 };
 
 const rollup_options_test = {
-    entry: 'tests/index.ts',
+    entry: 'test/index.ts',
     plugins: [typescript()],
     format: 'iife'
 };

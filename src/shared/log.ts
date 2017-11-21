@@ -26,7 +26,7 @@ export const PRINT_LOGS = true;
 const getTime = Date.now;
 
 let prefix = '';
-let win = unsafeWindow;
+let win = window;
 while (win.parent !== win) {
     win = win.parent;
     prefix += '-- ';

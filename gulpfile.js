@@ -168,9 +168,9 @@ gulp.task('testsToGhPages', ['build-ghpage'],
     () => {
         return [
             require('fs').writeFile('build/.nojekyll', ''),
-            gulp.src(['test/index.html', 'test/**/*.js']).pipe(gulp.dest(options.outputPath + '/test/')),
-            gulp.src('node_modules/mocha/mocha.*').pipe(gulp.dest(options.outputPath + '/node_modules/mocha/')),
-            gulp.src('node_modules/chai/chai.js').pipe(gulp.dest(options.outputPath + '/node_modules/chai/'))
+            gulp.src(['test/index.html', 'test/**/*.js']).pipe(gulp.dest(options['OUTPUT_PATH'] + '/test/')),
+            gulp.src('node_modules/mocha/mocha.*').pipe(gulp.dest(options['OUTPUT_PATH'] + '/node_modules/mocha/')),
+            gulp.src('node_modules/chai/chai.js').pipe(gulp.dest(options['OUTPUT_PATH'] + '/node_modules/chai/'))
         ];
     }
 );

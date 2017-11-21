@@ -11,7 +11,7 @@ const insertResource = require('./insert-resource');
 const removeGoogDeclareLegacyNamespace = require('./utill/transform-text').removeGoogDeclareLegacyNamespace;
 
 module.exports = (done) => {
-    return gulp.src(['src/**/*.ts', 'src/**/*.tsx', 'node_modules/preact/dist/preact.esm.js'])
+    return gulp.src(['src/**/*.ts', 'src/**/*.tsx'])
         .pipe(insert.transform(insertResource))
         .pipe(insert.transform(removeGoogDeclareLegacyNamespace))
         .pipe(rollup(options["ROLLUP_OPTIONS"]))

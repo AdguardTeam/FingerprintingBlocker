@@ -1,7 +1,12 @@
 # FingerprintingBlocker
 Fingerprinting blocker extension
 
-# Development
+# Development build
+
+Built automatically on every new commit: https://AdguardTeam.github.io/FingerprintingBlocker/fingerprintingblocker.user.js
+Unit test for dev build is [here](https://AdguardTeam.github.io/FingerprintingBlocker/test/).
+
+# How to build
 
 Install the package by running:
 ```

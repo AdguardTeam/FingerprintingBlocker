@@ -17,7 +17,6 @@ function createImageData(w:number, h:number):ImageData {
     }
 }
 
-
 function getRandomImageData(x?:number, y?:number):ImageData {
     x = x || Math.floor(Math.random() * 27) + 101;
     y = y || Math.floor(Math.random() * 27) + 101;
