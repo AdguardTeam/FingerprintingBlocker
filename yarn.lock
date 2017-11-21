@@ -269,6 +269,10 @@ cloneable-readable@^1.0.0:
     process-nextick-args "^1.0.6"
     through2 "^2.0.1"
 
+closure-library.ts@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/closure-library.ts/-/closure-library.ts-1.0.0.tgz#6156bc3456cc8f7e8a59dcc27bc0df1c659c53e9"
+
 code-point-at@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/code-point-at/-/code-point-at-1.1.0.tgz#0d070b4d043a5bea33a2f1a40e2edb3d9a4ccf77"

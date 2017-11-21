@@ -9,5 +9,8 @@ module.exports = {
     },
     removeCcExport: (content) => {
         return content.replace(/"REMOVE_START"[\s\S]*?"REMOVE_END"/, '');
+    },
+    removeGoogDeclareLegacyNamespace: (content) => {
+        return content.replace(/goog\.module\.declareLegacyNamespace\(\)/g, '');
     }
 };

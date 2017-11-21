@@ -49,10 +49,10 @@ describe('CanvasProcessor', function() {
         let croppedImageData = createImageData(w - x, h - y);
         crop(imageData.data, x, y, w - x, h - y, w, h, croppedImageData.data);
 
-        let { data: data1, result: result1 } = canvasProcessor.addNoiseToBitmap((buf) => { buf.set(imageData.data) }, 0, 0, w, h, w, h);
+        let { $data: data1, $result: result1 } = canvasProcessor.addNoiseToBitmap((buf) => { buf.set(imageData.data) }, 0, 0, w, h, w, h);
         let point1 = data1[(100 * w + 100) * 4];
 
-        let { data: data2, result: result2 } = canvasProcessor.addNoiseToBitmap((buf) => { buf.set(croppedImageData.data) }, x, y, w - x, h - y, w, h);        
+        let { $data: data2, $result: result2 } = canvasProcessor.addNoiseToBitmap((buf) => { buf.set(croppedImageData.data) }, x, y, w - x, h - y, w, h);        
         let point2 = data2[((100 - y) * (w - x) + (100 - x)) * 4];
 
         expect(point1).to.equal(point2);

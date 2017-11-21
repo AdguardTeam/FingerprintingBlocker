@@ -1,6 +1,7 @@
 import ICanvasProcessor from './ICanvasProcessor';
 import IResult from './IResult';
 import IStorageProvider from '../../storage/IStorageProvider';
+import * as log from '../../shared/log';
 
 // https://gist.github.com/wellcaffeinated/5399067#gistcomment-1364265
 const SIZE_64_KB = 65536;     // This equals to the size of 128 * 128 canvas.
@@ -44,7 +45,7 @@ export default class CanvasProcessor implements ICanvasProcessor {
 
 	private noiseApplyer2D:INoiseApplyer
 
-    constructor(private options:IStorageProvider, private $window:Window) {
+    constructor(private storage:IStorageProvider, private $window:Window) {
 		// Stores native methods here, which will be overridden later.
 		this.getContext = HTMLCanvasElement.prototype.getContext;
 		this.getImageData = CanvasRenderingContext2D.prototype.getImageData;
@@ -69,7 +70,11 @@ export default class CanvasProcessor implements ICanvasProcessor {
 			if (typeof this.$window.Math.imul !== 'function') {
 				this.$window.Math.imul = imul;
 			}
+
+			let init_start = performance.now();
 			this.noiseApplyer2D = noiseApplyerModule2D(this.$window, null, this.buffer);
+			let init_end = performance.now();
+			log.print(`Initializing noiser took ${init_end - init_start} ms.`);
 		}
 	}
 	/**
@@ -91,19 +96,19 @@ export default class CanvasProcessor implements ICanvasProcessor {
 
 		writeBuffCb(this.data8);
 
-		let h = this.options.getHashInInt32();
+		let h = this.storage.hash;
 
 		let start = performance.now();
 		let result = this.noiseApplyer2D._apply_noise(CanvasProcessor.DATA_OFFSET, sx, sy, width, height, origWidth, origHeight, h[0], h[1], h[2], h[3]);
 		let end = performance.now();
-		
-		console.log("[FingerprintingBlocker]: total " + result + " values have been modified.");
-		console.log(`Elapsed: ${end - start} ms.`);
-		console.log(`Canvas size was ${width} * ${height}`);
+
+		log.print("[FingerprintingBlocker]: total " + result + " values have been modified.");
+		log.print(`Elapsed: ${end - start} ms.`);
+		log.print(`Canvas size was ${width} * ${height}`);
 
 		return {
-			data: new Uint8Array(this.buffer, CanvasProcessor.DATA_OFFSET, dataSize),
-			result: result //this.resultBuffer32[0]
+			$data: new Uint8Array(this.buffer, CanvasProcessor.DATA_OFFSET, dataSize),
+			$result: result //this.resultBuffer32[0]
 		};
 	}
 
@@ -130,19 +135,19 @@ export default class CanvasProcessor implements ICanvasProcessor {
 		const imageData:ImageData = this.getImageData.call(context, -1, -1, w + 2, h + 2);
 		const data = imageData.data;
 
-		const { data: noiseApplied, result } = this.addNoiseToBitmap((buffView)=>{ buffView.set(data) }, -1, -1, w + 2, h + 2, w, h);
-		if (result) {
+		const { $data: noiseApplied, $result } = this.addNoiseToBitmap((buffView)=>{ buffView.set(data) }, -1, -1, w + 2, h + 2, w, h);
+		if ($result) {
 			imageData.data.set(noiseApplied);
 			cloned2dCanvas = cloned2dCanvas || document.createElement('canvas');
 			this.getContext.call(cloned2dCanvas, '2d').putImageData(imageData, 1, 1, 0, 0, w, h);
 			return {
-				data: cloned2dCanvas,
-				result: result
+				$data: cloned2dCanvas,
+				$result: $result
 			}
 		} else {
 			return {
-				data: canvas,
-				result: result
+				$data: canvas,
+				$result: $result
 			};
 		}
 	}

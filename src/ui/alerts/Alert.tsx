@@ -2,6 +2,7 @@
 
 import IStorageProvider from '../../storage/IStorageProvider';
 import BlockEvent, * as BlockEventTypes from '../../event/BlockEvent';
+import IStats from '../../storage/IStats';
 
 const h = preact.h;
 const Component = preact.Component;
@@ -13,13 +14,9 @@ interface IBaseProps {
 
 interface IPaneData {
     latestEvent?:BlockEvent
-
     currentAction:BlockEventTypes.Action
     currentNotificationSetting:boolean
-    currentStats: {
-        canvas:number
-        audio:number
-    }
+    currentStats:IStats
 }
 
 interface IAlertProps extends IBaseProps {
@@ -53,7 +50,7 @@ export default class Alert extends Component<IAlertProps, IAlertStates> {
         this.setState({
             currentAction: this.props.storage.action,
             currentNotificationSetting: this.props.storage.notify,
-            currentStats: this.props.storage.getCurrentStat()
+            currentStats: this.props.storage.getCurrentStat(this.props.domain)
         });
     }
     private toPage(index:number):void {
@@ -87,9 +84,7 @@ export default class Alert extends Component<IAlertProps, IAlertStates> {
                 return <Details {...this.toPaneProp()}/>
         }
     }
-
     public rootNode:Element;
-
     render () {
         return (
             <div>
@@ -101,17 +96,16 @@ export default class Alert extends Component<IAlertProps, IAlertStates> {
             </div>
         );
     }
-
     static readonly STYLE = "RESOURCE:ALERT_STYLE";
 }
 
 class BlockSummary extends Component<IPaneProps, any> {
     private onActionChangeClick(action:BlockEventTypes.Action):void {
-        this.props.storage.changeAction(action);
+        this.props.storage.changeAction(this.props.domain, action);
         this.props.fetchStorageUpdate();
     }
     private onSilenceClick():void {
-        this.props.storage.silenceNotification();
+        this.props.storage.silenceNotification(this.props.domain);
         this.props.fetchStorageUpdate();
     }
     private getSummaryMessage():string {
@@ -157,28 +151,26 @@ import parseStack from '../../stack/StackParseService';
 class Details extends Component<IPaneProps, never> {
     onActionChangeClick(action:BlockEventTypes.Action) {
         return () => {
-            this.props.storage.changeAction(action);
+            this.props.storage.changeAction(this.props.domain, action);
             this.props.fetchStorageUpdate();
         };
     }
     render(){
         const parseResult = parseStack(this.props.latestEvent.stack);
-        
-        const statHasCanvas = this.props.currentStats.canvas > 0;
-        const statHasAudio = this.props.currentStats.audio > 0;
-
+        const statHasCanvas = this.props.currentStats.canvasBlockCount > 0;
+        const statHasAudio = this.props.currentStats.audioBlockCount > 0;
         return (
             <div class="popup__text popup__text-detail">
                 <div class="popup__row">
                     {
                         statHasCanvas && <div class="popup__text-canvas">
-                            <div class="popup__count popup__count--canvas">{this.props.currentStats.canvas}</div>
+                            <div class="popup__count popup__count--canvas">{this.props.currentStats.canvasBlockCount}</div>
                             Canvas fingerprinting
                         </div>
                     }
                     {
                         statHasAudio && <div class="popup__text-audio">
-                            <div class="popup__count popup__count--audio">{this.props.currentStats.audio}</div>
+                            <div class="popup__count popup__count--audio">{this.props.currentStats.audioBlockCount}</div>
                             Audiocontext fingerprinting
                         </div>
                     }
@@ -215,14 +207,6 @@ class Details extends Component<IPaneProps, never> {
                         </div>
                         <textarea class="popup__detail-textarea">{parseResult.raw}</textarea>
                     </div>
-                    <div class="">
-                        <div class="popup__label popup__label-inline">
-                            Requested image: 
-                        </div>
-                        <button class="popup__detail-button">
-                            View
-                        </button>
-                    </div>
                 </div>
                 <div class="popup__row">
                     <div class="popup__text-action-label">
@@ -247,7 +231,7 @@ class Details extends Component<IPaneProps, never> {
                     <a href="" class="popup__link popup__link--action popup__link--log">
                         Trigger log
                     </a>
-                    <a href="" class="popup__link popup__link--action popup__link--reset" onClick={preventDefault(() => { this.props.storage.resetStatistics(); this.props.fetchStorageUpdate(); })}>
+                    <a href="" class="popup__link popup__link--action popup__link--reset" onClick={preventDefault(() => { this.props.storage.resetStatistics(this.props.domain); this.props.fetchStorageUpdate(); })}>
                         Reset statatistics
                     </a>
                     <a href="" class="popup__link popup__link--action" onClick={preventDefault(() => { this.props.toPage(0); })}>

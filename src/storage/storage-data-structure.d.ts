@@ -29,7 +29,13 @@ interface IGlobalSettings {
      * a notification will offer user to add sites to a blacklist.
      */
     defaultAction:number,
-    defaultNotify:boolean
+    defaultNotify:boolean,
+    /**
+     * A string to be used as a flag variable, independent to the hash,
+     * to be used in circumstances where we need a set a flag
+     * in certain same-origin iframes.
+     */
+    iframeKey?:string
 }
 
 interface ITriggerLogEntry {

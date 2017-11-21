@@ -7,6 +7,7 @@ import INotifier from '../../notifier/INotifier';
 import BlockEvent, { Apis, Action, CanvasBlockEvent, CanvasBlockEventType } from '../../event/BlockEvent';
 
 import TypeGuards from '../../shared/TypeGuards';
+import * as log from '../../shared/log';
 
 import { crop } from './CanvasProcessor';
 import WeakMap from '../../third-party/weakmap';
@@ -38,11 +39,11 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
     private anonymizeCanvasElementMethods:ApplyHandler<HTMLCanvasElement,any> = (orig, __this, _arguments) => {
         const contextType = this.canvasContextMap.get(__this);
         if (contextType) {
-            const {data, result} = this.canvasProcessor.clone2DCanvasWithNoise(__this, contextType);
-            if (result) {
+            const {$data, $result} = this.canvasProcessor.clone2DCanvasWithNoise(__this, contextType);
+            if ($result) {
                 // this.notifier.onBlocked('Faked HTMLCanvasElement method');
             }
-            __this = data;
+            __this = $data;
         }
         return orig.apply(__this, _arguments);
     };
@@ -56,12 +57,12 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
         const origHeight:number = __this.canvas.height;
         // Noiser requires +-1 more pixels for each of 4 directions to deterministically apply noises.
         let tempImageData:ImageData = orig.apply(__this, [sx - 1, sy - 1, sw + 2, sh + 2]);
-        const {data, result} = this.canvasProcessor.addNoiseToBitmap((buffView) => { buffView.set(tempImageData.data); }, sx - 1, sy - 1, sw + 2, sh + 2, origWidth, origHeight);
+        const {$data, $result} = this.canvasProcessor.addNoiseToBitmap((buffView) => { buffView.set(tempImageData.data); }, sx - 1, sy - 1, sw + 2, sh + 2, origWidth, origHeight);
 
         let imageData = new ImageData(sw, sh);
 
         // Convert dimension of the obtained imageData.
-        crop(data, 1, 1, sw, sh, sw + 2, sh + 2, imageData.data);
+        crop($data, 1, 1, sw, sh, sw + 2, sh + 2, imageData.data);
         return imageData;
     }
 
@@ -83,16 +84,16 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
                     const writeToProcessorBuff = (buffView) => {
                         orig.call(__this, sx - 1, sy - 1, sw + 2, sh + 2, format, type, buffView);
                     }
-                    const {data, result} = this.canvasProcessor.addNoiseToBitmap(writeToProcessorBuff, sx - 1, sy - 1, sw + 2, sh + 2, origWidth, origHeight);
+                    const {$data, $result} = this.canvasProcessor.addNoiseToBitmap(writeToProcessorBuff, sx - 1, sy - 1, sw + 2, sh + 2, origWidth, origHeight);
 
-                    crop(data, 1, 1, sw, sh, sw + 2, sh + 2, pixels);
+                    crop($data, 1, 1, sw, sh, sw + 2, sh + 2, pixels);
                     return;
                 }
             }
             case __this.UNSIGNED_SHORT_5_6_5:
             case __this.UNSIGNED_SHORT_5_5_5_1:
             case __this.UNSIGNED_SHORT_4_4_4_4:
-                console.log('called WebGL(2)RenderingContext#readPixels with a type whose faking is not supported.');
+                log.print('called WebGL(2)RenderingContext#readPixels with a type whose faking is not supported.');
             default:
                 return orig.apply(__this, _arguments);
         }      
@@ -136,13 +137,13 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
 
                 if (action === Action.ALLOW) {
                     let blockEvent = new CanvasBlockEvent(type, Action.ALLOW, stack, canvas);
-                    this.notifier.onBlocked(blockEvent);
+                    this.notifier.onBlock(blockEvent);
                     break breakThisToApplyOrig;
                 }
 
                 const ret = action === Action.FAKE ? fake(orig, __this, _arguments) : block(orig, __this, _arguments);
                 let blockEvent = new CanvasBlockEvent(type, action, stack, canvas);
-                this.notifier.onBlocked(blockEvent);
+                this.notifier.onBlock(blockEvent);
                 return ret;
             }
 

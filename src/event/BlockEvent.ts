@@ -51,13 +51,13 @@ interface IBaseEvent {
     type:number,
     action:Action,
     stack:string,
-    data:any
+    data?:any
 }
 
 interface ICanvasBlockEvent extends IBaseEvent {
     api:Apis.canvas
     type:CanvasBlockEventType
-    data:HTMLCanvasElement
+    data?:HTMLCanvasElement
 }
 
 export class CanvasBlockEvent implements ICanvasBlockEvent {
@@ -66,7 +66,7 @@ export class CanvasBlockEvent implements ICanvasBlockEvent {
         public type:CanvasBlockEventType,
         public action:Action,
         public stack:string,
-        public data:HTMLCanvasElement
+        public data?:HTMLCanvasElement
     ) { }
 }
 
@@ -82,7 +82,7 @@ export class AudioBlockEvent implements IAudioBlockEvent {
         public type:AudioBlockEventType,
         public action:Action,
         public stack:string,
-        public data:any
+        public data?:any
     ) { }
 }
 

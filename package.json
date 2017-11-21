@@ -15,6 +15,7 @@
     "asm.js": "dherman/asm.js",
     "chai": "^4.1.2",
     "clean-css": "^4.1.9",
+    "closure-library.ts": "^1.0.0",
     "fs-extra": "^4.0.2",
     "google-closure-compiler": "^20170910.0.0",
     "gulp": "^3.9.1",

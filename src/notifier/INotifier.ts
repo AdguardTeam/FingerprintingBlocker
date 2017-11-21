@@ -11,5 +11,5 @@ import TBlockEvent from '../event/BlockEvent';
                                                      +-----------------+
  */
 export default interface INotifier {
-    onBlocked(evt:TBlockEvent):void
+    onBlock(evt:TBlockEvent):void
 }

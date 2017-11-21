@@ -1,18 +1,23 @@
+import IStats from './IStats';
 import TBlockEvent, { Action } from '../event/BlockEvent';
 
 export default interface IStorageProvider {
+    domain:string
+
     action:Action
     notify:boolean
     confirm:boolean
     whitelisted:boolean
 
-    getHashInInt32():Int32Array
+    hash:Int32Array
 
-    getCurrentStat():{canvas:number, audio:number}
-    getTriggerLog():ITriggerLog
-    appendEvent(evt:TBlockEvent):void
+    globalKey?:string
 
-    changeAction(action:Action):void
-    silenceNotification():void
-    resetStatistics():void
+    getTriggerLog(domain:string):ITriggerLog
+    appendEvent(domain:string, evt:TBlockEvent):Readonly<IStats>
+    getCurrentStat(domain:string):Readonly<IStats>
+
+    changeAction(domain:string, action:Action):void
+    silenceNotification(domain:string):void
+    resetStatistics(domain:string):void
 }

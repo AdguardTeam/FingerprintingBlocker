@@ -11,27 +11,37 @@ import CanvasApiWrapper from './wrapper/canvas/CanvasApiWrapper';
 import AlertController from './ui/alerts/AlertController';
 
 const window = unsafeWindow.window;
-const KEY = Math.random().toString(36).substr(2);
 
-const storage           = new StorageProvider();
+const storage       = new StorageProvider();
 
-const canvasProcessor   = new CanvasProcessor(storage, window);
+const sessionKey = Math.random().toString(36).substr(2);
+const globalKey = storage.globalKey;
 
-const messageHub        = new InterContextMessageHub(window);
-const alertController   = new AlertController(storage);
-const notifier          = new Notifier(messageHub, storage, alertController);
+/**
+ * `globalKey` is used to indicate that the userscript has been run
+ * from the parent context which has the same origin.
+ * See SharedObjectProvider implementation.
+ */
+if (!window.hasOwnProperty(globalKey)) {
+    const canvasProcessor   = new CanvasProcessor(storage, window);
+    const messageHub        = new InterContextMessageHub(window);
+    const alertController   = new AlertController(storage);
+    const notifier          = new Notifier(messageHub, storage, alertController);
 
-function main (window:Window) {
-    const sharedObjectProvider  = new SharedObjectProvider(window, KEY, main);
-    const proxyService          = new ProxyService(false, sharedObjectProvider);
+    const main = (window:Window) => {
+        const sharedObjectProvider  = new SharedObjectProvider(window, inIframe, sessionKey, globalKey);
+        const proxyService          = new ProxyService(false, sharedObjectProvider);
+        sharedObjectProvider.initialize(proxyService);
+        const canvasApiWrapper      = new CanvasApiWrapper(proxyService, storage, canvasProcessor, notifier);
+        canvasApiWrapper.$apply(window);
+    }
 
-    sharedObjectProvider.initialize(proxyService);
+    const inIframe = (window:Window) => {
+        main(window);
+        new InterContextMessageHub(window, messageHub);
+    }
 
-    new InterContextMessageHub(window);
-
-    const canvasApiWrapper      = new CanvasApiWrapper(proxyService, storage, canvasProcessor, notifier);
-
-    canvasApiWrapper.$apply(window);
+    main(window);
+} else {
+    delete window[globalKey];
 }
-
-main(window);

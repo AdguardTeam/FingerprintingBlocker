@@ -1,8 +1,7 @@
 import IAlertController from './IAlertController';
 import IStorageProvider from '../../storage/IStorageProvider';
-
 import TBlockEvent from '../../event/BlockEvent';
-
+import IStats from '../../storage/IStats';
 import Alert from './Alert';
 
 const h = preact.h;
@@ -41,9 +40,9 @@ export default class AlertController implements IAlertController {
 
     private pendingDomain:string
     private pendingEvent:TBlockEvent
-    private pendingStat:{canvas:number, audio:number}
+    private pendingStat:IStats
 
-    createOrUpdateAlert(domain:string, event:TBlockEvent, stat:{canvas:number, audio:number}):void {
+    createOrUpdateAlert(domain:string, event:TBlockEvent, stat:IStats):void {
         if (this.alertInstance !== undefined) {
             if (this.alertInstance.props.domain !== domain) { return; }
             this.alertInstance.setState({
