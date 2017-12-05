@@ -1,0 +1,30 @@
+.select__arrow {
+    border-color: #999 transparent transparent;
+    border-style:solid;
+    border-width:4px 4px 2px;
+    display:inline-block;
+    height:0;
+    width:0;
+    position: absolute;
+    right: 5px;
+    top: 8px;
+}
+.select__input-wrap {
+    position: relative;
+}
+.select__input {
+    width: 100%;
+    padding: 3px;
+}
+.select__options-root {
+    border: 1px solid #999;
+    border-top: none;
+    max-height:200px;
+    overflow-y:scroll;
+}
+.select__option {
+    padding: 3px;
+}
+.select__option:hover{
+    background-color:#eee;
+}

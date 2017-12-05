@@ -1,6 +1,6 @@
 import ICanvasApiWrapper from './ICanvasApiWrapper';
 import IProxyService, { ApplyHandler } from '../../proxy/IProxyService';
-import IStorageProvider from '../../storage/IStorageProvider';
+import IStorage from '../../storage/IStorage';
 import ICanvasProcessor from './ICanvasProcessor';
 import INotifier from '../../notifier/INotifier';
 
@@ -130,7 +130,7 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
                     // https://www.ghacks.net/2017/10/28/firefox-58-warns-you-if-sites-use-canvas-image-data/
                     let msg = `Will you allow ${domain} to use your HTML5 canvas image data? This may be used to uniquely identify your computer.`;
                     // Use a ui-blocking window.confirm
-                    if(!window.confirm(msg)) {
+                    if(window.confirm(msg)) {
                         break breakThisToApplyOrig;
                     }
                 }
@@ -156,8 +156,9 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
     private static canvasFromContext = (ctxt:CanvasRenderingContext2D|WebGLRenderingContext|WebGL2RenderingContext):HTMLCanvasElement => ctxt.canvas;
 
     $apply(window:Window) {
-        let domain = window.location.hostname;
+        if (this.storage.whitelisted) { return; }
 
+        const domain = this.storage.domain;
         const canvasPType = window.HTMLCanvasElement.prototype;
         this.proxyService.wrapMethod(canvasPType, 'getContext', this.trackCanvasContextStatus);
         this.proxyService.wrapMethod(
@@ -243,7 +244,7 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
 
     constructor(
         private proxyService:IProxyService,
-        private storage:IStorageProvider,
+        private storage:IStorage,
         private canvasProcessor:ICanvasProcessor,
         private notifier:INotifier
     ) {

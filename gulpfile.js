@@ -100,23 +100,25 @@ const opts_uglify     = require('./tasks/options/uglify');
 /********************************** Atomic Tasks **********************************************/
 /**********************************************************************************************/
 
-gulp.task('clean',      require('./tasks/clean'));
-gulp.task('meta',       require('./tasks/meta'));
-gulp.task('rollup',     require('./tasks/rollup'));
+gulp.task('clean',                  require('./tasks/clean'));
+gulp.task('meta',                   require('./tasks/meta'));
+gulp.task('rollup',                 require('./tasks/rollup'));
 
-gulp.task('validate-asm', require('./tasks/asm/validate'));
-gulp.task('generate-asm', require('./tasks/asm/generate'));
-gulp.task('append-asm', require('./tasks/asm/append'));
+gulp.task('validate-asm',           require('./tasks/asm/validate'));
+gulp.task('generate-asm',           require('./tasks/asm/generate'));
+gulp.task('append-asm',             require('./tasks/asm/append'));
 
-gulp.task('tsickle',    require('./tasks/tscc/tsickle'));
-gulp.task('tscc',       require('./tasks/tscc/tscc'));
-gulp.task('tscc-clean', require('./tasks/tscc/clean'));
+gulp.task('tsickle',                require('./tasks/tscc/tsickle'));
+gulp.task('tscc',                   require('./tasks/tscc/tscc'));
+gulp.task('tscc-clean',             require('./tasks/tscc/clean'));
 
-gulp.task('uglify',     require('./tasks/uglify'));
+gulp.task('uglify',                 require('./tasks/uglify'));
 
-gulp.task('build-test', require('./tasks/test'));
+gulp.task('build-test',             require('./tasks/pages/test'));
+gulp.task('build-settings-js',      require('./tasks/pages/settings'));
+gulp.task('build-settings-html',    require('./tasks/pages/settings-html'));
 
-gulp.task('watch',      require('./tasks/watch'));
+gulp.task('watch',                  require('./tasks/watch'));
 
 
 /**********************************************************************************************/
@@ -160,11 +162,11 @@ gulp.task('release-no-minification',
 
 gulp.task('build-ghpage',
     (done) => {
-        runSequence('clean', ['dev', 'build-test'], done);
+        runSequence('clean', ['dev', 'build-test', 'build-settings-js'], done);
     }
 );
 
-gulp.task('testsToGhPages', ['build-ghpage'],
+gulp.task('travis', ['build-ghpage', 'build-settings-html'],
     () => {
         return [
             require('fs').writeFile('build/.nojekyll', ''),

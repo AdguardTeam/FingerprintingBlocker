@@ -3,7 +3,6 @@ import ISharedObjectProvider from './ISharedObjectProvider';
 import WeakMap from '../third-party/weakmap';
 
 export default class ProxyService implements IProxyService {
-
     private proxyToReal:IWeakMap<any, any>
     private realToProxy:IWeakMap<any, any>
 
@@ -58,5 +57,4 @@ export default class ProxyService implements IProxyService {
             });
         }
     }
-
 }

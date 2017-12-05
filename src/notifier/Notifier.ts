@@ -1,10 +1,10 @@
 import INotifier from './INotifier';
-import IStorageProvider from '../storage/IStorageProvider';
-import IAlertData from '../ui/alerts/IAlertData';
-import IAlertController from '../ui/alerts/IAlertController';
+import IStorage from '../storage/IStorage';
+
+import IAlertController from '../ui/alerts/controller/IAlertController';
 import IInterContextMessageHub, { TMessageHubCallback } from '../messaging/IInterContextMessageHub';
 
-import AlertData from '../ui/alerts/AlertData';
+import { IAlertMessage } from '../ui/alerts/message'
 
 import TBlockEvent from '../event/BlockEvent';
 
@@ -16,11 +16,11 @@ const enum NotifierMessageType {
 }
 
 export default class Notifier implements INotifier {
-    private transferAlertData:TMessageHubCallback<IAlertData>
+    private transferAlertData:TMessageHubCallback<IAlertMessage>
 
     constructor(
         private messageHub:IInterContextMessageHub,
-        private storage:IStorageProvider,
+        private storage:IStorage,
         private alertController?:IAlertController
     ) {
         this.installAlertDataTransferrer();
@@ -33,22 +33,27 @@ export default class Notifier implements INotifier {
 
         if (this.storage.notify) {
             // produces AlertData interface.
-            let alertData = new AlertData(this.storage.domain, evt);
-            this.transferAlertData(alertData);
+            let alertMessage:IAlertMessage = {
+                domain: this.storage.domain,
+                blockEvent: evt
+            };
+            this.transferAlertData(alertMessage);
         }
     }
     private installAlertDataTransferrer() {
         if (this.messageHub.isTop) {
             this.transferAlertData = (data) => {
-                let stat = this.storage.appendEvent(data.domain, data.blockEvent);
-                this.alertController.createOrUpdateAlert(data.domain, data.blockEvent, stat);
+                (typeof requestIdleCallback === 'function' ? requestIdleCallback : setTimeout)(() => {
+                    let stat = this.storage.appendEventAndStat(data.blockEvent);
+                    this.alertController.createOrUpdateAlert(data, stat);
+                });
             }
         } else {
             // Pass the message to the top.
             this.transferAlertData = (data) => {
-                this.messageHub.trigger<IAlertData>(0, data, this.messageHub.parent);
+                this.messageHub.trigger<IAlertMessage>(0, data, this.messageHub.parent);
             };
         }
-        this.messageHub.on<IAlertData>(0, this.transferAlertData);
+        this.messageHub.on<IAlertMessage>(0, this.transferAlertData);
     }
 }

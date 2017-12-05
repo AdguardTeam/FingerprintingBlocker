@@ -4,7 +4,7 @@ const fs = require('fs');
 
 const RESOURCE_PATH_MAP = {
     "ALERT_TEMPLATE": 'src/ui/template.html',
-    "ALERT_STYLE": 'src/ui/alerts/alert-style.css',
+    "ALERT_STYLE": 'src/ui/alerts/components/alert_style.css',
     // "TRANSLATIONS": 'src/locales/translations.json'
 };
 

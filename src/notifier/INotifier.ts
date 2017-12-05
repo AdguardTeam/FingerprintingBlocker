@@ -1,4 +1,3 @@
-import IAlertData from '../ui/alerts/IAlertData';
 import TBlockEvent from '../event/BlockEvent';
 
 /****************************************************************************
@@ -7,7 +6,7 @@ import TBlockEvent from '../event/BlockEvent';
     | CanvasApiWrapper | ---> | Notifier |  ---+---> | AlertController |
     +------------------+      +----------+     |     +-----------------+
                                                |     +-----------------+
-                                               +---> | StorageProvider |
+                                               +---> |     Storage     |
                                                      +-----------------+
  */
 export default interface INotifier {

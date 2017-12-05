@@ -1,0 +1,25 @@
+body {
+    font-family: "Gotham Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: lighter;
+    font-size: 14px;
+    margin:0px;
+}
+
+.settings__root {
+    margin: auto;
+    max-width: 800px;
+
+}
+.settings__table {
+    display: table;
+}
+
+.settings__row {
+    display: table-row;
+    width: 100%;
+}
+
+.settings__col {
+    display: table-cell;
+    padding: 5px 5px 5px 5px;
+}

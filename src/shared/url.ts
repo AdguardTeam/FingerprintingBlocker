@@ -55,6 +55,12 @@ export const createLocation = (href:string):HTMLAnchorElement => {
     return anchor;
 };
 
+/**
+ * Determines whether 2 contexts A and B are in the same origin.
+ * @param url_A absolute or relative url of the context A
+ * @param location_B location object of the context B
+ * @param domain_B `document.domain` of the context B
+ */
 export const isSameOrigin = (url_A:string, location_B:Location, domain_B:string):boolean => {
     const location_A = createLocation(url_A);
     if (location_A.protocol === 'javascript:' || location_A.href === 'about:blank') {
@@ -65,6 +71,5 @@ export const isSameOrigin = (url_A:string, location_B:Location, domain_B:string)
     }
     return location_A.hostname === domain_B && location_A.port === location_B.port && location_A.protocol === location_B.protocol;
 }
-
 
 export default createUrl;

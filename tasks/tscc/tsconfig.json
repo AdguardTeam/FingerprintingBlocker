@@ -5,8 +5,7 @@
         "outDir": "../../build/tscc",
         "module": "commonjs",
         "jsx": "react",
-        "jsxFactory": "h",
-        "allowJs": true     
+        "jsxFactory": "h"
     },
     "include": [
         "../../src/**/*.ts",

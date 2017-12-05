@@ -13,6 +13,7 @@
 // @match https://*/*
 // @grant GM_getValue
 // @grant GM_setValue
+// @grant GM_listValues
 // @grant unsafeWindow
 // @require https://cdnjs.cloudflare.com/ajax/libs/preact/8.2.6/preact.min.js
 // @run-at document-start
