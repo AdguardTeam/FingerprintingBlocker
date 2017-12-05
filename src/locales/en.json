@@ -1,5 +1,68 @@
 {
-    "popup_whitelist_domain": {
-        "message": "Whitelist fingerprinting blocker in the current page?"
+    "allow": {
+        "message": "Allow"
+    },
+    "fake": {
+        "message": "Fake"
+    },
+    "block": {
+        "message": "Block"
+    },
+    "popup.detected": {
+        "message": "Detected"
+    },
+    "popup.faked": {
+        "message": "Faked"
+    },
+    "popup.blocked": {
+        "message": "Blocked"
+    },
+    "popup.fp_attempt": {
+        "message": "FP attempt"
+    },
+    "popup.allow_expl": {
+        "message": "Fingerprinting blocker will only notify you about possible fingerprinting attempts."
+    },
+    "popup.allow_confirm": {
+        "message": "Fingerprint will be \"allowed\" for the current domain."
+    },
+    "popup.fake_confirm": {
+        "message": "Fingerprint will be \"faked\" for the current domain."
+    },
+    "popup.block_confirm": { 
+        "message": "Fingerprint will be \"blocked\" for the current domain."
+    },
+    "popup.fake_expl": {
+        "message": "Fingerprinting blocker will automatically mix noise to the fingerprinting data. More settings for noise generation is available in the settings page."
+    },
+    "popup.block_expl": {
+        "message": "Fingerprinting blocker will provide empty data, as if browser api is not supported. Warning: this option is more likelihood of breaking page."
+    },
+    "popup.fp_attempt_detected": {
+        "message": "Fingerprinting attempts detected:"
+    },
+    "popup.choose_action": {
+        "message": "Choose action:"
+    },
+    "popup.notify_about_attempts": {
+        "message": "Notify about detected fingerprinting attempts"
+    },
+    "popup.notify_expl": {
+        "message": "If you chose not to show notifications, you can change this settings via the settings page."
+    },
+    "popup.confirm": {
+        "message": "Confirm"
+    },
+    "popup.cancel":{
+        "message": "Cancel"
+    },
+    "popup.details": {
+        "message": "Details..."
+    },
+    "popup.detected_expl": {
+        "message": "Detected a possible fingerprinting attempt. This may be used to uniquely identify your computer."
+    },
+    "popup.applied_action": {
+        "message": "Applied action:"
     }
 }

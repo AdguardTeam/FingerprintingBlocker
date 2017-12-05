@@ -1,13 +1,20 @@
 
-import IStorage from '../../../storage/IStorage'
+import IStorage, { IDomainSettingsStorage } from '../../../storage/IStorage'
 import TBlockEvent, { Action } from '../../../event/BlockEvent'
 import IStats from '../../../storage/IStats'
-import BlockSummary from './Summary'
+
+import FirstTimeNotification from './FirstTimeNotification'
+import Collapsed from './Collapsed'
+import SaveSuccess from './SaveSuccess'
 import Details from './Details'
+import TriggerLogView from './TriggerLogView'
+
 import TypeGuards from '../../../shared/TypeGuards'
 import DomainSettingsStorage from '../../../storage/DomainSettingsStorage'
 import GlobalSettingsStorage from '../../../storage/GlobalSettingsStorage'
-import { bind } from '../../utils/event_listener_decorators'
+import { bind, trustedEventListener } from '../../utils/event_listener_decorators'
+
+import Pages from './PagesEnum'
 
 const h = preact.h;
 const Component = preact.Component;
@@ -20,19 +27,27 @@ export interface ICommonState {
 }
 
 interface IAlertProps {
-    storage:IStorage
+    storage:IDomainSettingsStorage
     onClose:()=>void
     onUpdate:()=>void
 }
 
 interface IAlertState extends ICommonState {
-    currentPage:number
+    currentPage:Pages
 }
 
 export default class Alert extends Component<IAlertProps, IAlertState> {
     static readonly STYLE = "RESOURCE:ALERT_STYLE";
-    constructor(props) {
+    constructor(props:IAlertProps) {
         super(props);
+        const storage = props.storage;
+        const pageToShow = storage.getIsModified() ? Pages.COLLAPSED : Pages.FIRST_TIME;
+        this.state = {
+            action: storage.getAction(),
+            notify: storage.getNotify(),
+            latestEvent: null,
+            currentPage: pageToShow
+        }
         this.toPage = bind.call(this.toPage, this);
         this.fetchStorageUpdate();
         this.fetchStorageUpdate = bind.call(this.fetchStorageUpdate, this);
@@ -40,15 +55,31 @@ export default class Alert extends Component<IAlertProps, IAlertState> {
     private fetchStorageUpdate() {
         const storage = this.props.storage;
         this.setState({
-            action: storage.action,
-            notify: storage.notify
+            action: storage.getAction(),
+            notify: storage.getNotify()
         });
     }
-    private toPage(index:number):void {
-        this.setState({
-            currentPage: index
-        });
+    /**
+     * Navigates the alert to a different page(state).
+     * If an optional argument 
+     */
+    private toPage(index:Pages, timeout?:number):void {
+        if (!TypeGuards.isUndef(this.toPageTimer)) {
+            clearTimeout(this.toPageTimer);
+            this.toPageTimer = undefined;
+        }
+        if (timeout) {
+            this.toPageTimer = setTimeout(this.toPage, timeout, index);
+            // `this.toPage` is already bound to `this` in the constructor
+        } else {
+            this.setState({
+                currentPage: index
+            });
+        }
     }
+    private toPageTimer:number
+
+    // Contains a logic for switching component according to the current page(state).
     private renderMainPane() {
         // Passing props one by one in order to avoid using object rest operator
         // which will be converted to Object.assign, which requires a polyfill.
@@ -56,28 +87,44 @@ export default class Alert extends Component<IAlertProps, IAlertState> {
         const storage = this.props.storage;
         const latestEvent = this.state.latestEvent;
         const currentAction = this.state.action;
-        const currentNotificationSetting = this.state.notify;
+        const currentNotify = this.state.notify;
         const toPage = this.toPage;
         const fetchStorageUpdate = this.fetchStorageUpdate;
+        const onUpdate = this.props.onUpdate;
 
-        switch (this.state.currentPage) {
-            case 0:
-                return <BlockSummary
+        const currentPage = this.state.currentPage
+
+        switch (currentPage) {
+            case Pages.FIRST_TIME:
+                return <FirstTimeNotification
                     storage={storage}
-                    latestEvent={latestEvent}
-                    action={currentAction}
-                    notify={currentNotificationSetting}
                     toPage={toPage}
                     fetchStorageUpdate={fetchStorageUpdate}
                 />
-            case 1:
-                return <Details 
-                    storage={storage}
+            case Pages.COLLAPSED:
+                return <Collapsed
                     latestEvent={latestEvent}
+                    toPage={toPage}
+                />
+            case Pages.SAVE_SUCCESS:
+                return <SaveSuccess
                     action={currentAction}
-                    notify={currentNotificationSetting}
+                    toPage={toPage}
+                />
+            case Pages.DETAILS:
+                return <Details
+                    storage={storage}
+                    action={currentAction}
+                    notify={currentNotify}
+                    latestEvent={latestEvent}
                     toPage={toPage}
                     fetchStorageUpdate={fetchStorageUpdate}
+                    onUpdate={onUpdate}
+                />
+            case Pages.TRIGGER_LOG:
+                return <TriggerLogView
+                    storage={storage}
+                    toPage={toPage}
                 />
         }
     }
@@ -87,14 +134,19 @@ export default class Alert extends Component<IAlertProps, IAlertState> {
     componentDidUpdate() {
         this.props.onUpdate();
     }
+    componentWillUnmount() {
+        if (!TypeGuards.isUndef(this.toPageTimer)) {
+            clearTimeout(this.toPageTimer);
+        }
+    }
     public rootNode:Element
-    render(props:IAlertProps) {
+    render(props:IAlertProps, state:IAlertState) {
         return (
             <div>
                 <div class="popup" ref={(el) => { this.rootNode = el; }}>
                     <div class="popup__logo"></div>
                     {this.renderMainPane()}
-                </div>
+                </div>        
                 <button class="popup__close" onClick={() => { this.props.onClose(); }}></button>
             </div>
         );

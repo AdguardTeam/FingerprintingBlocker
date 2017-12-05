@@ -1,11 +1,11 @@
 import IAlertController from './IAlertController'
-import IStorage from '../../../storage/IStorage'
+import IStorage, { IGlobalSettingsStorage } from '../../../storage/IStorage'
 import TBlockEvent from '../../../event/BlockEvent'
 import IStats from '../../../storage/IStats'
 import { IAlertData } from '../message'
 import Alert from '../components/Alert'
+import Pages from '../components/PagesEnum'
 import * as log from '../../../shared/log'
-import IGlobalSettingsStorage from '../../../storage/IGlobalSettingsStorage';
 
 const h = preact.h;
 const Component = preact.Component;
@@ -63,6 +63,7 @@ export default class AlertController implements IAlertController {
             this.pendingEvent = event;
             this.pendingStat = stat;
             let iframe = this.iframe = document.createElement('iframe');
+
             iframe.addEventListener('load', () => {
                 let doc = iframe.contentDocument;
                 this.appendStyle(doc);
@@ -78,9 +79,9 @@ export default class AlertController implements IAlertController {
                     />,
                     doc.body
                 );
+
                 this.alertInstance.setState({
-                    latestEvent: this.pendingEvent,
-                    currentPage: 0
+                    latestEvent: this.pendingEvent
                 });
                 this.pendingDomain = undefined;
                 this.pendingEvent = undefined;
@@ -139,7 +140,7 @@ export default class AlertController implements IAlertController {
         this.iframe = undefined;
         this.alertInstance = undefined;
     }
-    private static readonly TIMEOUT = 8000;
+    private static readonly TIMEOUT = 1008000;
     private static readonly MIN_TIMEOUT = 1000;
     private timer:number
     private timerPrevented:boolean = false

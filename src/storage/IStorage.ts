@@ -3,18 +3,16 @@ import TBlockEvent, { Action } from '../event/BlockEvent';
 import FakingModes from './FakingModesEnum';
 
 export default interface IStorage {
-    readonly action:Action
-    readonly notify:boolean
-    readonly confirm:boolean
-    readonly whitelisted:boolean
-    readonly fakingMode:FakingModes
-    readonly updateInterval:number
-
     readonly globalKey?:string
     readonly domain?:string
-    /**
-     * Methods for modifying settings
-     */
+
+    getAction():Action
+    getNotify():boolean
+    getConfirm():boolean
+    getWhitelisted():boolean
+    getFakingMode():FakingModes
+    getUpdateInterval():number
+
     setAction(action:Action):void
     setNotify(notify:boolean):void
     setConfirm(confirm:boolean):void
@@ -33,10 +31,25 @@ export default interface IStorage {
      * @todo make this api asynchronous
      */
     getTriggerLog():ITriggerLog
-    resetStatistics():void // todo change to resetTriggerLog
-    appendEventAndStat?(evt:TBlockEvent, domain?:string):Readonly<IStats>
-    getCurrentStat():Readonly<IStats>
+    getStats():Readonly<IStats>
+    appendEvent(evt:TBlockEvent, domain?:string):void
+    resetStatistics():void
     enumerateDomains?():string[]
 
     init():this
+}
+
+export interface IGlobalSettingsStorage extends IStorage {
+    getDomainStorage(domain:string):IDomainSettingsStorage
+}
+
+export interface IDomainSettingsStorage extends IStorage {
+    getActionIsModified():boolean
+    getNotifyIsModified():boolean
+    getConfirmIsModified():boolean
+    getWhitelistedIsModified():boolean
+    getFakingModeIsModified():boolean
+    getUpdateIntervalIsModified():boolean
+    
+    getIsModified():boolean
 }

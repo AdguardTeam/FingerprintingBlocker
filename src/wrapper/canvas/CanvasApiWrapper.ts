@@ -117,7 +117,7 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
     ):ApplyHandler<T,R> {
         return (orig, __this:T, _arguments) => {
             let stack = (new Error).stack;
-            let action = this.storage.action;
+            let action = this.storage.getAction();
             let canvas = getData(__this);
 
             breakThisToApplyOrig: {
@@ -125,7 +125,7 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
                     break breakThisToApplyOrig;
                 }
 
-                if (this.storage.confirm) {
+                if (this.storage.getConfirm()) {
                     // This is the message that FF shows.
                     // https://www.ghacks.net/2017/10/28/firefox-58-warns-you-if-sites-use-canvas-image-data/
                     let msg = `Will you allow ${domain} to use your HTML5 canvas image data? This may be used to uniquely identify your computer.`;
@@ -156,7 +156,7 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
     private static canvasFromContext = (ctxt:CanvasRenderingContext2D|WebGLRenderingContext|WebGL2RenderingContext):HTMLCanvasElement => ctxt.canvas;
 
     $apply(window:Window) {
-        if (this.storage.whitelisted) { return; }
+        if (this.storage.getWhitelisted()) { return; }
 
         const domain = this.storage.domain;
         const canvasPType = window.HTMLCanvasElement.prototype;

@@ -64,3 +64,8 @@ interface ITriggerLogEntry {
 }
 
 type ITriggerLog = ITriggerLogEntry[]
+
+interface IStoredStats {
+    canvas:number, 
+    audio:number
+}

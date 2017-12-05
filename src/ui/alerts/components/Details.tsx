@@ -5,112 +5,133 @@ import parseStack from '../../../stack/StackParseService'
 import * as options from '../../options/radio_input_options'
 import { bind, trustedEventListener } from '../../utils/event_listener_decorators'
 import IStorage from '../../../storage/IStorage';
+import Pages from './PagesEnum'
+import { getMessage } from '../../localization'
 
 const h = preact.h;
 const Component = preact.Component;
 
 interface IDetailsProps extends ICommonState {
     storage:IStorage
-    latestEvent:BlockEvent
-    toPage(index:number):void
+    toPage(index:number, timeout?:number):void
     fetchStorageUpdate():void
+    onUpdate():void
 }
 
-export default class Details extends Component<IDetailsProps, never> {
+interface IDetailsState {
+    chosenAction:Action
+    chosenNotify:boolean
+}
+
+export default class Details extends Component<IDetailsProps, IDetailsState> {
     constructor(props) {
         super(props);
-        this.onActionChange = bind.call(this.onActionChange, this);
-        this.onResetStatisticsClick = trustedEventListener(this.onResetStatisticsClick, this);
-        this.onBackClick = trustedEventListener(this.onBackClick, this);
+        this.state = {
+            chosenAction: props.action,
+            chosenNotify: props.notify
+        };
+        this.onStatNumberClick = trustedEventListener(this.onStatNumberClick, this);
+        this.onActionSelection = trustedEventListener(this.onActionSelection, this);
+        this.onNotifyCheckboxClick = trustedEventListener(this.onNotifyCheckboxClick, this);
+        this.onConfirm = trustedEventListener(this.onConfirm, this);
+        this.onSave = trustedEventListener(this.onSave, this);
     }
-    private onActionChange(action:Action) {
-        this.props.storage.setAction(action);
+
+    private onStatNumberClick(evt:UIEvent) {
+        this.props.toPage(Pages.TRIGGER_LOG);
+    }
+
+    private onActionSelection(evt:UIEvent) {
+        this.setState({
+            chosenAction: parseInt((evt.currentTarget as HTMLSelectElement).value, 10)
+        });
+    }
+    private onNotifyCheckboxClick(evt:UIEvent) {
+        this.setState({
+            chosenNotify: (evt.currentTarget as HTMLInputElement).checked
+        });
+    }
+    private onConfirm(evt:UIEvent) {
+        this.props.storage.setAction(this.state.chosenAction);
+        this.props.storage.setNotify(this.state.chosenNotify);
         this.props.fetchStorageUpdate();
+        this.onSave(evt);
     }
-    private onResetStatisticsClick() {
-        this.props.storage.resetStatistics();
-        this.props.fetchStorageUpdate();
+    private onSave(evt:UIEvent) {
+        this.props.toPage(Pages.SAVE_SUCCESS);
+        this.props.toPage(Pages.DETAILS, 5000);
     }
-    private onBackClick() {
-        this.props.toPage(0);
+    private getActionExplanation(action:Action):string {
+        switch (action) {
+            case Action.ALLOW:
+                return getMessage("popup.allow_expl");
+            case Action.FAKE:
+                return getMessage("popup.fake_expl");
+            case Action.BLOCK:
+                return getMessage("popup.block_expl");
+        }
     }
-    render(props:IDetailsProps) {
+    componentDidMount() {
+        this.props.onUpdate();
+    }
+    componentDidUpdate() {
+        this.props.onUpdate();
+    }
+    render(props:IDetailsProps, state:IDetailsState) {
         const domain = props.storage.domain;
         const parseResult = parseStack(props.latestEvent.stack);
-        const currentStats = props.storage.getCurrentStat();
+        const currentStats = props.storage.getStats();
         const statHasCanvas = currentStats.canvasBlockCount > 0;
         const statHasAudio = currentStats.audioBlockCount > 0;
+        
         return (
             <div class="popup__text">
-                <div class="popup__row">
-                    {
-                        statHasCanvas && <div>
-                            <div class="popup__count popup__count--canvas">{currentStats.canvasBlockCount}</div>
-                            Canvas fingerprinting
-                        </div>
-                    }
-                    {
-                        statHasAudio && <div>
-                            <div class="popup__count popup__count--audio">{currentStats.audioBlockCount}</div>
-                            Audiocontext fingerprinting
-                        </div>
-                    }
-                    {
-                        (statHasCanvas || statHasAudio) ?
-                        <div class="popup__label">
-                            from {domain}
-                        </div> :
-                        <div class="popup__label">
-                            No fingerprinting attempts from {domain}
-                        </div>
-                    }
+                <div class="popup__text--domain">
+                    {domain}
+                </div>
+                <div class="popup__text--paragraph">
+                    {getMessage("popup.fp_attempt_detected")}
+                    <a href="" class="popup__link" onClick={this.onStatNumberClick}>
+                        {currentStats.canvasBlockCount + currentStats.audioBlockCount}
+                    </a>
                 </div>
                 <div class="popup__row">
                     <div>
-                        <div class="popup__label popup__label-inline">
-                            Latest event:
-                        </div>
-                        <div class="popup__label-detail">
-                            {getApiName(props.latestEvent.api, this.props.latestEvent.type)}
-                        </div>
+                        {getMessage("popup.choose_action")}
                     </div>
-                    <div>
-                        <div class="popup__label popup__label-inline">
-                            Called from a file:
-                        </div>
-                        <div class="popup__label-detail">
-                            {parseResult.callingFile}
-                        </div>
-                    </div>
-                    <div>
-                        <div class="popup__label">
-                            Calling stack:
-                        </div>
-                        <textarea class="popup__detail-textarea">{parseResult.raw}</textarea>
+                    <select value={String(state.chosenAction)} onChange={this.onActionSelection}>
+                        <option value={String(Action.ALLOW)}>
+                            {getMessage("allow")}
+                        </option>
+                        <option value={String(Action.FAKE)}>
+                            {getMessage("fake")}
+                        </option>
+                        <option value={String(Action.BLOCK)}>
+                            {getMessage("block")}
+                        </option>
+                    </select>
+                    <div class="popup__text--paragraph">
+                        {this.getActionExplanation(state.chosenAction)}
                     </div>
                 </div>
                 <div class="popup__row">
-                    <div>
-                        Choose action:
+                    <label>
+                        <input type="checkbox" checked={state.chosenNotify}/>
+                        {getMessage("popup.notify_about_attempts")}
+                    </label>
+                    <div class="popup__text--paragraph">
+                        {getMessage("popup.notify_expl")}
                     </div>
-                    <RadioInputGroup
-                        options={options.ACTION_OPTIONS}
-                        selected={props.action}
-                        onRadioInputClick={this.onActionChange}
-                    />
                 </div>
-                <div class="popup__row">
-                    <a href="" class="popup__link popup__link--action popup__link--log">
-                        Trigger log
-                    </a>
-                    <a href="" class="popup__link popup__link--action popup__link--reset" onClick={this.onResetStatisticsClick}>
-                        Reset statatistics
-                    </a>
-                    <a href="" class="popup__link popup__link--action" onClick={this.onBackClick}>
-                        Back...
-                    </a>
+                <div>
+                    <button class="popup__button" onClick={this.onConfirm}>
+                        {getMessage("popup.confirm")}
+                    </button>
+                    <button class="popup__button" onClick={this.onSave}>
+                        {getMessage("popup.cancel")}
+                    </button>
                 </div>
             </div>
-        );
+        )
     }
 }

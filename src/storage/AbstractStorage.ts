@@ -6,12 +6,12 @@ import * as base64 from '../shared/base64';
 import TypeGuards from '../shared/TypeGuards';
 
 export default abstract class AbstractSettingsStorage implements IStorage {
-    public action:Action
-    public notify:boolean
-    public confirm:boolean
-    public whitelisted:boolean
-    public fakingMode:FakingModes
-    public updateInterval:number
+    protected action:Action
+    protected notify:boolean
+    protected confirm:boolean
+    protected whitelisted:boolean
+    protected fakingMode:FakingModes
+    protected updateInterval:number
 
     protected abstract load():void
     protected abstract save():void
@@ -21,27 +21,32 @@ export default abstract class AbstractSettingsStorage implements IStorage {
         this.updateHashIfNeeded();
         return this;
     }
-
+    abstract getAction():Action
     setAction(action:Action):void {
         this.action = action;
         this.save();
     }
+    abstract getNotify():boolean
     setNotify(notify:boolean):void {
         this.notify = notify;
         this.save();
     }
+    abstract getConfirm():boolean
     setConfirm(confirm:boolean):void {
         this.confirm = confirm;
         this.save();
     }
+    abstract getWhitelisted():boolean
     setWhitelisted(whitelisted:boolean):void {
         this.whitelisted = whitelisted;
-        this.save;
+        this.save();
     }
+    abstract getFakingMode():FakingModes
     setFakingmode(fakingMode:FakingModes):void {
         this.fakingMode = fakingMode;
         this.save();
     }
+    abstract getUpdateInterval():number
     setUpdateInterval(updateInterval:number):void {
         this.updateInterval = updateInterval;
         this.save();
@@ -71,23 +76,31 @@ export default abstract class AbstractSettingsStorage implements IStorage {
     }
 
     protected readonly LOG_PREFIX = 'log#'
+    protected readonly STATS_PREFIX = 'stats#'
     protected readonly GLOBAL_SETTINGS_KEY = 'settings'
     protected readonly now = Date.now
 
-    abstract getTriggerLog():ITriggerLog
-    abstract resetStatistics():void
 
-    abstract appendEventAndStat?(evt:TBlockEvent, domain?:string):Readonly<IStats>
-    abstract getCurrentStat():Readonly<IStats>
-    enumerateDomains():string[] {
-        let keys = GM_listValues();
-        return keys.filter((key) => {
-            return key !== this.GLOBAL_SETTINGS_KEY &&
-                key.indexOf(this.LOG_PREFIX) !== 0;
-        });
+    protected triggerLog:ITriggerLog
+    protected stats:IStats
+
+    protected abstract loadStats():void
+    protected abstract saveStats():void
+
+    getTriggerLog():ITriggerLog {
+        if (TypeGuards.isUndef(this.triggerLog))
+            this.loadStats();
+        return this.triggerLog;
     }
-    // Utility methods.
-    protected appendEvent(triggerLog:ITriggerLog, evt:TBlockEvent, domain?:string):void {
+    getStats():Readonly<IStats> {
+        if (TypeGuards.isUndef(this.stats))
+            this.loadStats();
+        return this.stats;
+    }
+    appendEvent(evt:TBlockEvent, domain?:string):void {
+        if (TypeGuards.isUndef(this.triggerLog))
+            this.loadStats();
+
         const entry:ITriggerLogEntry = {
             date: this.now(),
             api: evt.api,
@@ -96,32 +109,31 @@ export default abstract class AbstractSettingsStorage implements IStorage {
             stack: evt.stack
         };
         if (domain) { entry.domain = domain; } 
-        triggerLog.push(entry);
-    }
-    protected increaseStat(stats:IStats, evt:TBlockEvent):void {
+        this.triggerLog.push(entry);
         switch (evt.api) {
             case Apis.canvas:
-                stats.canvasBlockCount++;
+                this.stats.canvasBlockCount++;
                 break;
             case Apis.audio:
-                stats.audioBlockCount++;
+                this.stats.audioBlockCount++;
                 break;
         }
+        this.saveStats();
     }
-    protected getStatFromTriggerLog(triggerLog:ITriggerLog):IStats {
-        let canvasCount = 0;
-        let audioCount = 0;
-        for (let i = 0, l = triggerLog.length; i < l; i++) {
-            let entry = triggerLog[i];
-            switch (entry.api) {
-                case Apis.canvas:
-                    canvasCount++;
-                    break;
-                case Apis.audio:
-                    audioCount++;
-                    break;
-            }
-        }
-        return { canvasBlockCount: canvasCount, audioBlockCount: audioCount };
+    resetStatistics():void {
+        this.triggerLog = [];
+        this.stats = {
+            canvasBlockCount: 0,
+            audioBlockCount: 0
+        };
+        this.saveStats();
+    }
+
+    enumerateDomains():string[] {
+        let keys = GM_listValues();
+        return keys.filter((key) => {
+            return key !== this.GLOBAL_SETTINGS_KEY &&
+                key.indexOf(this.LOG_PREFIX) !== 0;
+        });
     }
 }

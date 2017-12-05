@@ -1,18 +1,17 @@
-import IStorage from './IStorage'
+import IStorage, { IGlobalSettingsStorage, IDomainSettingsStorage } from './IStorage'
 import IStats from './IStats';
 import TBlockEvent, { Apis, Action } from '../event/BlockEvent';
 import FakingModes from './FakingModesEnum';
 import * as base64 from '../shared/base64';
 import TypeGuards from '../shared/TypeGuards';
 import AbstractSettingsStorage from './AbstractStorage';
-import IGlobalSettingsStorage from './IGlobalSettingsStorage';
 import DomainSettingsStorage from './DomainSettingsStorage';
 
 export default class GlobalSettingsStorage extends AbstractSettingsStorage implements IGlobalSettingsStorage {
     public globalKey:string
 
     // Default global settings 
-    private static readonly DEFAULT_ACTION          = Action.FAKE
+    private static readonly DEFAULT_ACTION          = Action.ALLOW
     private static readonly DEFAULT_NOTIFY          = true
     private static readonly DEFAULT_CONFIRM         = false
     private static readonly DEFAULT_WHITELISTED     = false
@@ -66,8 +65,49 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
             this.domainStorageMap[domain].init();
         }
     }
-    private domainStorageMap:stringmap<IStorage>
-    getDomainStorage(domain:string) {
+
+    getAction():Action {
+        return this.action;
+    }
+    getNotify():boolean {
+        return this.notify;
+    }
+    getConfirm():boolean {
+        return this.confirm;
+    }
+    getWhitelisted():boolean {
+        return this.whitelisted;
+    }
+    getFakingMode():FakingModes {
+        return this.fakingMode;
+    }
+    getUpdateInterval():number {
+        return this.updateInterval;
+    }
+
+    protected loadStats():void {
+        const domains = this.enumerateDomains();
+        this.triggerLog = mergeTriggerLogs(domains.map((domain) => {
+            return {
+                log: JSON.parse(GM_getValue(this.LOG_PREFIX + domain, '[]')),
+                domain: domain
+            };
+        }));
+        this.stats = domains.map((domain) => {
+            return GM_getValue(this.STATS_PREFIX + domain);
+        }).reduce((prev, current) => {
+            prev.canvasBlockCount += current.canvas;
+            prev.audioBlockCount += current.audio;
+        }, {
+            canvasBlockCount: 0,
+            audioBlockCount: 0
+        });
+    }
+
+    protected saveStats():void { } // Does nothing
+    
+    private domainStorageMap:stringmap<IDomainSettingsStorage>
+    getDomainStorage(domain:string):IDomainSettingsStorage {
         if (TypeGuards.isUndef(this.domainStorageMap)) {
             this.domainStorageMap = Object.create(null);
         }
@@ -77,50 +117,6 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
             domainStorage.init();
         }
         return domainStorage;
-    }
-
-    /**
-     * Note that below methods will only be used in settings page,
-     * those should be removed by closure compiler on userscript build.
-     */
-    private stats:IStats
-    private triggerLog:ITriggerLog
-    getTriggerLog():ITriggerLog {
-        if (this.triggerLog) {
-            return this.triggerLog;
-        }
-        let domains = this.enumerateDomains();
-        // mege sort
-        return mergeTriggerLogs(domains.map((domain) => {
-            return {
-                log: JSON.parse(GM_getValue(this.LOG_PREFIX + domain, '[]')),
-                domain: domain
-            };
-        }));
-    }
-    resetStatistics():void {
-        let domains = this.enumerateDomains();
-        for (let l = domains.length; l > 0; l--) {
-            let domain = domains[l];
-            GM_setValue(this.LOG_PREFIX + domain, '[]');
-        }
-    }
-    appendEventAndStat(evt:TBlockEvent, domain:string):Readonly<IStats> {
-        const triggerLog = this.triggerLog;
-        if (TypeGuards.isUndef(triggerLog)) { return; }
-        this.appendEvent(triggerLog, evt, domain);
-        if (TypeGuards.isUndef(this.stats)) {
-            this.stats = this.getStatFromTriggerLog(triggerLog);
-        } else {
-            this.increaseStat(this.stats, evt);
-        }
-        return this.stats;
-    }
-    getCurrentStat():Readonly<IStats> {
-        if (!TypeGuards.isUndef(this.stats)) {
-            return this.stats;
-        }
-        return (this.stats = this.getStatFromTriggerLog(this.getTriggerLog()));
     }
 }
 

@@ -31,7 +31,7 @@ export default class Notifier implements INotifier {
         // delete non-transferrable object
         delete evt.data;
 
-        if (this.storage.notify) {
+        if (this.storage.getNotify()) {
             // produces AlertData interface.
             let alertMessage:IAlertMessage = {
                 domain: this.storage.domain,
@@ -44,7 +44,8 @@ export default class Notifier implements INotifier {
         if (this.messageHub.isTop) {
             this.transferAlertData = (data) => {
                 (typeof requestIdleCallback === 'function' ? requestIdleCallback : setTimeout)(() => {
-                    let stat = this.storage.appendEventAndStat(data.blockEvent);
+                    this.storage.appendEvent(data.blockEvent);
+                    let stat = this.storage.getStats();
                     this.alertController.createOrUpdateAlert(data, stat);
                 });
             }

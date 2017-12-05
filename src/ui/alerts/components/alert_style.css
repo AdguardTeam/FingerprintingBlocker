@@ -7,12 +7,19 @@ body {
     position: fixed;
     top: 0px;
     right: 0px;
+    max-width: 400px;
+
+
     padding: 15px 35px 15px 20px;
     font-size: 13px;
     white-space: nowrap;
     background-color: #fff;
     border: 1px solid #D6D6D6;
     box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .2);
+}
+
+.popup__text--min {
+    width: 80px;
 }
 
 .popup--detail {
@@ -46,8 +53,19 @@ body {
     line-height: 1.6;
 }
 
+.popup__text--summary {
+    word-wrap:break-word;
+    white-space: normal
+}
+
+.popup__text--paragraph {
+    word-wrap: break-word;
+    white-space: normal;
+    font-weight: lighter;
+}
+
+
 .popup__text-blocked {
-    max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -92,8 +110,13 @@ body {
     margin-right: 5px; 
 }
 
+
+.popup__text--domain {
+    font-size: 20px;
+}
+
 .popup__row:not(:first-of-type) {
-    border-top: 1px solid #e0dfdb;
+    /* border-top: 1px solid #e0dfdb;*/
     padding: 11px 0;
 }
 
@@ -110,18 +133,37 @@ body {
     color: #5d7c9b;
 }
 
+
+
 .popup__close {
     position: absolute;
     top: 10px;
-    right: 10px;
+    
     width: 15px;
     height: 15px;
     border: 0;
     background-color: #fff;
     background-repeat: no-repeat;
-    background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMC41IDIwLjUiPjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0xMS4zIDEwLjNsOS05Yy4zLS4zLjMtLjggMC0xLjFzLS44LS4zLTEuMSAwbC05IDktOS05QzEtLjEuNS0uMS4yLjJzLS4zLjggMCAxLjFsOSA5LTkgOWMtLjMuMy0uMy44IDAgMS4xLjEuMS4zLjIuNS4ycy40LS4xLjUtLjJsOS05IDkgOWMuMS4xLjMuMi41LjJzLjQtLjEuNS0uMmMuMy0uMy4zLS44IDAtMS4xbC04LjktOXoiLz48L3N2Zz4=);
     -webkit-appearance: none;
     appearance: none;
     cursor: pointer;
     opacity: 0.3;
+}
+
+.popup__close {
+    right: 10px;
+    background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMC41IDIwLjUiPjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0xMS4zIDEwLjNsOS05Yy4zLS4zLjMtLjggMC0xLjFzLS44LS4zLTEuMSAwbC05IDktOS05QzEtLjEuNS0uMS4yLjJzLS4zLjggMCAxLjFsOSA5LTkgOWMtLjMuMy0uMy44IDAgMS4xLjEuMS4zLjIuNS4ycy40LS4xLjUtLjJsOS05IDkgOWMuMS4xLjMuMi41LjJzLjQtLjEuNS0uMmMuMy0uMy4zLS44IDAtMS4xbC04LjktOXoiLz48L3N2Zz4=);
+}
+
+.popup__back {
+    width: 15px;
+    height: 15px;
+    border: 0;
+    background-color: #fff;
+    background-repeat: no-repeat;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    opacity: 0.3;
+    background-image: url(data:image/svg+xml,<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">    <path d="M1004.339 458.957h-786.842l342.528-342.528c7.322-7.322 5.683-20.736-3.584-30.054l-49.459-49.459c-9.318-9.318-22.784-10.906-30.054-3.584l-468.429 468.429c-3.379 3.379-4.659 8.192-4.301 13.21-0.051 0.256-0.051 0.461-0.102 0.717 0.051 0.205 0.051 0.41 0.051 0.614-0.358 5.018 0.973 9.83 4.352 13.21l468.429 468.429c7.322 7.322 20.787 5.683 30.054-3.533l49.459-49.51c9.267-9.318 10.906-22.784 3.584-30.054l-338.33-338.33h782.643c13.107 0 23.757-10.65 23.757-23.808v-69.888c0-13.21-10.65-23.859-23.757-23.859z"></path></svg>)
 }
