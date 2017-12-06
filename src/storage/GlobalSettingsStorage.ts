@@ -24,23 +24,23 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
 
         if (!TypeGuards.isUndef(globalSettingsStringified)) {
             const globalSettings = <IGlobalSettings>JSON.parse(globalSettingsStringified);
-            this.action = globalSettings.defaultAction;
-            this.notify = globalSettings.defaultNotify;
-            this.confirm = globalSettings.defaultConfirm;
-            this.whitelisted = globalSettings.defaultWhitelisted;
-            this.fakingMode = globalSettings.defaultFakingMode;
-            this.updateInterval = globalSettings.defaultUpdateInterval;
+            this.$action = globalSettings.defaultAction;
+            this.$notify = globalSettings.defaultNotify;
+            this.$confirm = globalSettings.defaultConfirm;
+            this.$whitelisted = globalSettings.defaultWhitelisted;
+            this.$fakingMode = globalSettings.defaultFakingMode;
+            this.$updateInterval = globalSettings.defaultUpdateInterval;
             this.globalKey = globalSettings.iframeKey;
             this.hash = new Int32Array(16);
             base64.decode(globalSettings.hash, new Uint8Array(this.hash));
             this.lastUpdated = globalSettings.lastUpdated;
         } else {
-            this.action = GlobalSettingsStorage.DEFAULT_ACTION;
-            this.notify = GlobalSettingsStorage.DEFAULT_NOTIFY;
-            this.confirm = GlobalSettingsStorage.DEFAULT_CONFIRM;
-            this.whitelisted = GlobalSettingsStorage.DEFAULT_WHITELISTED;
-            this.fakingMode = GlobalSettingsStorage.DEFAULT_FAKING_MODE;
-            this.updateInterval = GlobalSettingsStorage.DEFAULT_UPDATE_INTERVAL;
+            this.$action = GlobalSettingsStorage.DEFAULT_ACTION;
+            this.$notify = GlobalSettingsStorage.DEFAULT_NOTIFY;
+            this.$confirm = GlobalSettingsStorage.DEFAULT_CONFIRM;
+            this.$whitelisted = GlobalSettingsStorage.DEFAULT_WHITELISTED;
+            this.$fakingMode = GlobalSettingsStorage.DEFAULT_FAKING_MODE;
+            this.$updateInterval = GlobalSettingsStorage.DEFAULT_UPDATE_INTERVAL;
             this.globalKey = base64.encode(new Uint8Array(this.getRandomHash()));
             this.hash = this.getRandomHash();
             this.lastUpdated = this.now();
@@ -50,12 +50,12 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
 
     protected save() {
         const globalSettings:IGlobalSettings = {
-            defaultAction: this.action,
-            defaultNotify: this.notify,
-            defaultConfirm: this.confirm,
-            defaultWhitelisted: this.whitelisted,
-            defaultFakingMode: this.fakingMode,
-            defaultUpdateInterval: this.updateInterval,
+            defaultAction: this.$action,
+            defaultNotify: this.$notify,
+            defaultConfirm: this.$confirm,
+            defaultWhitelisted: this.$whitelisted,
+            defaultFakingMode: this.$fakingMode,
+            defaultUpdateInterval: this.$updateInterval,
             hash: base64.encode(new Uint8Array(this.hash)),
             lastUpdated: this.now(),
             iframeKey: this.globalKey
@@ -67,32 +67,35 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
     }
 
     getAction():Action {
-        return this.action;
+        return this.$action;
     }
     getNotify():boolean {
-        return this.notify;
+        return this.$notify;
     }
     getConfirm():boolean {
-        return this.confirm;
+        return this.$confirm;
     }
     getWhitelisted():boolean {
-        return this.whitelisted;
+        return this.$whitelisted;
     }
     getFakingMode():FakingModes {
-        return this.fakingMode;
+        return this.$fakingMode;
     }
     getUpdateInterval():number {
-        return this.updateInterval;
+        return this.$updateInterval;
     }
 
     protected loadStats():void {
         const domains = this.enumerateDomains();
-        this.triggerLog = mergeTriggerLogs(domains.map((domain) => {
-            return {
-                log: JSON.parse(GM_getValue(this.LOG_PREFIX + domain, '[]')),
-                domain: domain
-            };
-        }));
+        /** @todo optimize this */
+        this.triggerLog = Array.prototype.concat.apply([], domains.map((domain) => {
+            return JSON.parse(GM_getValue(this.LOG_PREFIX + domain, '[]')).map(entry => {
+                entry.domain = domain;
+                return entry;
+            });
+        })).sort((a, b) => {
+            return b.date - a.date;
+        });
         this.stats = domains.map((domain) => {
             return GM_getValue(this.STATS_PREFIX + domain);
         }).reduce((prev, current) => {
@@ -105,7 +108,6 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
     }
 
     protected saveStats():void { } // Does nothing
-    
     private domainStorageMap:stringmap<IDomainSettingsStorage>
     getDomainStorage(domain:string):IDomainSettingsStorage {
         if (TypeGuards.isUndef(this.domainStorageMap)) {
@@ -117,13 +119,5 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
             domainStorage.init();
         }
         return domainStorage;
-    }
-}
-
-function mergeTriggerLogs(things:{ log:ITriggerLog, domain:string }[]):ITriggerLog {
-    // just a stub
-    const minHeap = new Array(things.length);
-    while (true) {
-
     }
 }

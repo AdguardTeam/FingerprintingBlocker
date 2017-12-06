@@ -1,5 +1,4 @@
 import { ICommonState } from './Alert'
-import RadioInputGroup from '../../elements/RadioInputGroup'
 import BlockEvent, { Action, getApiName } from '../../../event/BlockEvent'
 import parseStack from '../../../stack/StackParseService'
 import * as options from '../../options/radio_input_options'

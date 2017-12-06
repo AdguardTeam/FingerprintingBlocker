@@ -34,7 +34,7 @@
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-typescript2": "^0.7.0",
     "run-sequence": "^2.2.0",
-    "tsickle": "0.25.0",
+    "tsickle": "^0.25.5",
     "typescript": "2.5.3"
   },
   "dependencies": {

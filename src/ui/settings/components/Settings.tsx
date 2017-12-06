@@ -3,7 +3,7 @@ import Select from '../../elements/Select'
 import RadioInputGroup from '../../elements/RadioInputGroup'
 import IStorage from '../../../storage/IStorage'
 import BlockEvent, { Action } from '../../../event/BlockEvent';
-import FakingModesEnum from '../../../storage/FakingModesEnum'
+import FakingModes from '../../../storage/FakingModesEnum'
 import * as radioInputOptions from '../../options/radio_input_options';
 
 const h = preact.h;
@@ -50,7 +50,7 @@ export default class GlobalSettings extends Component<ISettingsProps, ISettingsS
         this.props.storage.setWhitelisted(whitelisted);
         this.setState({});
     }
-    private onFakingModechange(fakingMode:FakingModesEnum) {
+    private onFakingModechange(fakingMode:FakingModes) {
         this.props.storage.setFakingmode(fakingMode);
         this.setState({});
     }
@@ -58,6 +58,8 @@ export default class GlobalSettings extends Component<ISettingsProps, ISettingsS
         this.props.onDomainChange(value);
     }
     render(props:ISettingsProps, state:ISettingsState) {
+        const fakingMode = props.storage.getFakingMode();
+        const updateIntervalIsApplicable = fakingMode === FakingModes.CONSTANT || fakingMode === FakingModes.PER_DOMAIN;
         return (
             <div class="settings__root">
                 <div>
@@ -83,7 +85,7 @@ export default class GlobalSettings extends Component<ISettingsProps, ISettingsS
                         <div class="settings__col">
                             <RadioInputGroup
                                 options={radioInputOptions.ACTION_OPTIONS}
-                                selected={props.storage.action}
+                                selected={props.storage.getAction()}
                                 onRadioInputClick={this.onActionChange}
                             />
                         </div>
@@ -95,7 +97,7 @@ export default class GlobalSettings extends Component<ISettingsProps, ISettingsS
                         <div class="settings__col">
                             <RadioInputGroup
                                 options={radioInputOptions.SHOW_OPTIONS}
-                                selected={props.storage.notify}
+                                selected={props.storage.getNotify()}
                                 onRadioInputClick={this.onNotifyChange}
                             />
                         </div>
@@ -107,7 +109,7 @@ export default class GlobalSettings extends Component<ISettingsProps, ISettingsS
                         <div class="settings__col">
                             <RadioInputGroup
                                 options={radioInputOptions.SHOW_OPTIONS}
-                                selected={props.storage.confirm}
+                                selected={props.storage.getConfirm()}
                                 onRadioInputClick={this.onConfirmChange}
                             />
                         </div>
@@ -119,7 +121,7 @@ export default class GlobalSettings extends Component<ISettingsProps, ISettingsS
                         <div class="settings__col">
                             <RadioInputGroup
                                 options={radioInputOptions.WHITELIST_OPTIONS}
-                                selected={props.storage.whitelisted}
+                                selected={props.storage.getWhitelisted()}
                                 onRadioInputClick={this.onWhitelistedChange}
                             />
                         </div>
@@ -131,19 +133,22 @@ export default class GlobalSettings extends Component<ISettingsProps, ISettingsS
                         <div class="settings__col">
                             <RadioInputGroup
                                 options={radioInputOptions.FAKING_MODE_OPTIONS}
-                                selected={props.storage.fakingMode}
+                                selected={fakingMode}
                                 onRadioInputClick={this.onFakingModechange}
                             />
                         </div>
                     </div>
-                    <div class="settings__row">
-                        <div class="settings__label settings__col">
-                            update Interval
+                    {
+                        updateIntervalIsApplicable && <div class="settings__row">
+                            <div class="settings__label settings__col">
+                                update Interval
+                            </div>
+                            <div class="settings__col">
+                                <input type="text" value={String(props.storage.getUpdateInterval())}/>
+                            </div>
                         </div>
-                        <div class="settings__col">
-                            <input type="text" value={String(props.storage.updateInterval)}/>
-                        </div>
-                    </div>
+                    }
+                    
                 </div>
             </div>
         )

@@ -125,10 +125,10 @@ export default class AlertController implements IAlertController {
     private updateIframeDimension():void {
         const el = this.alertInstance.rootNode;
         if (el) {
-            let height = el.scrollHeight + 2; // border width
-            let width = el.scrollWidth + 2;
-            this.iframe.style['height'] = height + 5 /* shadow */ + 2 /* border */ + px;
-            this.iframe.style['width'] = width + 2 /* shadow */ + 2 /* border */ + px;
+            let height = el.scrollHeight + 4;
+            let width = el.scrollWidth + 9;
+            this.iframe.style['height'] = height + px;
+            this.iframe.style['width'] = width + px;
         }
     }
     private destroy():void {
@@ -140,7 +140,7 @@ export default class AlertController implements IAlertController {
         this.iframe = undefined;
         this.alertInstance = undefined;
     }
-    private static readonly TIMEOUT = 1008000;
+    private static readonly TIMEOUT = 8000;
     private static readonly MIN_TIMEOUT = 1000;
     private timer:number
     private timerPrevented:boolean = false

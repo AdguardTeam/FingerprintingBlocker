@@ -6,12 +6,12 @@ import * as base64 from '../shared/base64';
 import TypeGuards from '../shared/TypeGuards';
 
 export default abstract class AbstractSettingsStorage implements IStorage {
-    protected action:Action
-    protected notify:boolean
-    protected confirm:boolean
-    protected whitelisted:boolean
-    protected fakingMode:FakingModes
-    protected updateInterval:number
+    protected $action:Action
+    protected $notify:boolean
+    protected $confirm:boolean
+    protected $whitelisted:boolean
+    protected $fakingMode:FakingModes
+    protected $updateInterval:number
 
     protected abstract load():void
     protected abstract save():void
@@ -21,52 +21,54 @@ export default abstract class AbstractSettingsStorage implements IStorage {
         this.updateHashIfNeeded();
         return this;
     }
+
     abstract getAction():Action
-    setAction(action:Action):void {
-        this.action = action;
-        this.save();
-    }
     abstract getNotify():boolean
-    setNotify(notify:boolean):void {
-        this.notify = notify;
-        this.save();
-    }
     abstract getConfirm():boolean
-    setConfirm(confirm:boolean):void {
-        this.confirm = confirm;
-        this.save();
-    }
     abstract getWhitelisted():boolean
-    setWhitelisted(whitelisted:boolean):void {
-        this.whitelisted = whitelisted;
-        this.save();
-    }
     abstract getFakingMode():FakingModes
-    setFakingmode(fakingMode:FakingModes):void {
-        this.fakingMode = fakingMode;
+    abstract getUpdateInterval():number
+
+    setAction(action:Action):void {
+        this.$action = action;
         this.save();
     }
-    abstract getUpdateInterval():number
+    setNotify(notify:boolean):void {
+        this.$notify = notify;
+        this.save();
+    }
+    setConfirm(confirm:boolean):void {
+        this.$confirm = confirm;
+        this.save();
+    }
+    setWhitelisted(whitelisted:boolean):void {
+        this.$whitelisted = whitelisted;
+        this.save();
+    }
+    setFakingmode(fakingMode:FakingModes):void {
+        this.$fakingMode = fakingMode;
+        this.save();
+    }
     setUpdateInterval(updateInterval:number):void {
-        this.updateInterval = updateInterval;
+        this.$updateInterval = updateInterval;
         this.save();
     }
 
     protected hash:Int32Array
     protected lastUpdated:number
-    getHash():Int32Array {
-        if (this.fakingMode === FakingModes.EVERY_TIME) {
+    getSalt():Int32Array {
+        if (this.$fakingMode === FakingModes.EVERY_TIME) {
             return this.getRandomHash();
         } else {
             return this.hash;
         }
     }
-    updateHash():void {
+    updateSalt():void {
         this.hash = this.getRandomHash();
     }
     protected updateHashIfNeeded():void {
-        if (!this.hash || this.now() - this.lastUpdated > this.updateInterval) {
-            this.updateHash();
+        if (!this.hash || this.now() - this.lastUpdated > this.$updateInterval) {
+            this.updateSalt();
         }
     }
     protected getRandomHash():Int32Array {
@@ -133,7 +135,8 @@ export default abstract class AbstractSettingsStorage implements IStorage {
         let keys = GM_listValues();
         return keys.filter((key) => {
             return key !== this.GLOBAL_SETTINGS_KEY &&
-                key.indexOf(this.LOG_PREFIX) !== 0;
+                key.indexOf(this.LOG_PREFIX) !== 0 &&
+                key.indexOf(this.STATS_PREFIX) !== 0;
         });
     }
 }

@@ -84,7 +84,6 @@ export default class InterContextMessageHub implements IInterContextMessageHub {
     }
     registerChildPort(child:Window, port:MessagePort) {
         log.print('MessageHub: registering child context directly..');
-        console.log(child.location.href);
         this.framePortMap.set(child, {
             messagePort: port,
             locationObject: child.location

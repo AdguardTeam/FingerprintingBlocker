@@ -3,7 +3,6 @@ import TBlockEvent, { Action } from '../event/BlockEvent';
 import FakingModes from './FakingModesEnum';
 
 export default interface IStorage {
-    readonly globalKey?:string
     readonly domain?:string
 
     getAction():Action
@@ -23,8 +22,8 @@ export default interface IStorage {
     /**
      * Methods for noise seeds
      */
-    getHash():Int32Array
-    updateHash():void
+    getSalt():Int32Array
+    updateSalt():void
 
     /**
      * Methods for trigger logs
@@ -36,20 +35,37 @@ export default interface IStorage {
     resetStatistics():void
     enumerateDomains?():string[]
 
+    /**
+     * Initializes the storage by loading data.
+     */
     init():this
 }
 
+/**
+ * Default settings storage and domain-specific settings
+ * storage have the same interface, so as to be used interchangeably
+ * in settings page.
+ */
 export interface IGlobalSettingsStorage extends IStorage {
+    readonly globalKey:string
+    /**
+     * Domain-specific settings storage created by it
+     * will be managed internally so that we do not spawn
+     * duplicate storage.
+     */
     getDomainStorage(domain:string):IDomainSettingsStorage
 }
 
 export interface IDomainSettingsStorage extends IStorage {
+    /**
+     * Below methods indicates whether certain settings key
+     * is manually set by users.
+     */
     getActionIsModified():boolean
     getNotifyIsModified():boolean
     getConfirmIsModified():boolean
     getWhitelistedIsModified():boolean
     getFakingModeIsModified():boolean
     getUpdateIntervalIsModified():boolean
-    
-    getIsModified():boolean
+    getAnythingIsModified():boolean
 }

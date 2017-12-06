@@ -41,7 +41,7 @@ export default class Alert extends Component<IAlertProps, IAlertState> {
     constructor(props:IAlertProps) {
         super(props);
         const storage = props.storage;
-        const pageToShow = storage.getIsModified() ? Pages.COLLAPSED : Pages.FIRST_TIME;
+        const pageToShow = storage.getAnythingIsModified() ? Pages.COLLAPSED : Pages.FIRST_TIME;
         this.state = {
             action: storage.getAction(),
             notify: storage.getNotify(),
@@ -137,6 +137,7 @@ export default class Alert extends Component<IAlertProps, IAlertState> {
     componentWillUnmount() {
         if (!TypeGuards.isUndef(this.toPageTimer)) {
             clearTimeout(this.toPageTimer);
+            this.toPageTimer = undefined;
         }
     }
     public rootNode:Element
@@ -146,7 +147,7 @@ export default class Alert extends Component<IAlertProps, IAlertState> {
                 <div class="popup" ref={(el) => { this.rootNode = el; }}>
                     <div class="popup__logo"></div>
                     {this.renderMainPane()}
-                </div>        
+                </div>
                 <button class="popup__close" onClick={() => { this.props.onClose(); }}></button>
             </div>
         );

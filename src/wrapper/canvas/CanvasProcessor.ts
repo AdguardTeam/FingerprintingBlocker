@@ -96,7 +96,7 @@ export default class CanvasProcessor implements ICanvasProcessor {
 
         writeBuffCb(this.data8);
 
-        let h = this.storage.getHash();
+        let h = this.storage.getSalt();
 
         let start = performance.now();
         let result = this.noiseApplyer2D._apply_noise(CanvasProcessor.DATA_OFFSET, sx, sy, width, height, origWidth, origHeight, h[0], h[1], h[2], h[3]);

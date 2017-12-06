@@ -7,13 +7,6 @@ import TypeGuards from '../shared/TypeGuards'
 import AbstractSettingsStorage from './AbstractStorage'
 
 export default class DomainSettingsStorage extends AbstractSettingsStorage implements IDomainSettingsStorage {
-    protected action:Action
-    protected notify:boolean
-    protected confirm:boolean
-    protected whitelisted:boolean
-    protected fakingMode:FakingModes
-    protected updateInterval:number
-
     constructor(
         public domain:string,
         private globalSettings:IStorage
@@ -23,40 +16,40 @@ export default class DomainSettingsStorage extends AbstractSettingsStorage imple
         const domainSettingsStringified = GM_getValue(this.domain);
         if (TypeGuards.isUndef(domainSettingsStringified)) { return; }
         const domainSettings =  <IDomainSettings>JSON.parse(domainSettingsStringified);
-        this.action = domainSettings.action;
-        this.notify = domainSettings.notify;
-        this.confirm = domainSettings.confirm;
-        this.whitelisted = domainSettings.whitelisted;
-        this.fakingMode = domainSettings.fakingMode;
-        this.updateInterval = domainSettings.updateInterval;
+        this.$action = domainSettings.action;
+        this.$notify = domainSettings.notify;
+        this.$confirm = domainSettings.confirm;
+        this.$whitelisted = domainSettings.whitelisted;
+        this.$fakingMode = domainSettings.fakingMode;
+        this.$updateInterval = domainSettings.updateInterval;
     }
 
     protected save() {
         const domainSettings:IDomainSettings = {};
         let hasSpecificSettings = false;
-        if (!TypeGuards.isUndef(this.action)) {
+        if (!TypeGuards.isUndef(this.$action)) {
             hasSpecificSettings = true;
-            domainSettings.action = this.action;
+            domainSettings.action = this.$action;
         }
-        if (!TypeGuards.isUndef(this.notify)) {
+        if (!TypeGuards.isUndef(this.$notify)) {
             hasSpecificSettings = true;
-            domainSettings.notify = this.notify;
+            domainSettings.notify = this.$notify;
         }
-        if (!TypeGuards.isUndef(this.confirm)) {
+        if (!TypeGuards.isUndef(this.$confirm)) {
             hasSpecificSettings = true;
-            domainSettings.confirm = this.confirm;
+            domainSettings.confirm = this.$confirm;
         }
-        if (!TypeGuards.isUndef(this.whitelisted)) {
+        if (!TypeGuards.isUndef(this.$whitelisted)) {
             hasSpecificSettings = true;
-            domainSettings.whitelisted = this.whitelisted;
+            domainSettings.whitelisted = this.$whitelisted;
         }
-        if (!TypeGuards.isUndef(this.fakingMode)) {
+        if (!TypeGuards.isUndef(this.$fakingMode)) {
             hasSpecificSettings = true;
-            domainSettings.fakingMode = this.fakingMode;
+            domainSettings.fakingMode = this.$fakingMode;
         }
-        if (!TypeGuards.isUndef(this.updateInterval)) {
+        if (!TypeGuards.isUndef(this.$updateInterval)) {
             hasSpecificSettings = true;
-            domainSettings.updateInterval = this.updateInterval;
+            domainSettings.updateInterval = this.$updateInterval;
         }
         if (hasSpecificSettings) {
             GM_setValue(this.domain, JSON.stringify(domainSettings));
@@ -64,42 +57,42 @@ export default class DomainSettingsStorage extends AbstractSettingsStorage imple
     }
 
     getAction():Action {
-        return this.getActionIsModified() ? this.action : this.globalSettings.getAction();
+        return this.getActionIsModified() ? this.$action : this.globalSettings.getAction();
     }
     getActionIsModified() {
-        return !TypeGuards.isUndef(this.action);
+        return !TypeGuards.isUndef(this.$action);
     }
     getNotify():boolean {
-        return this.getNotifyIsModified() ? this.notify : this.globalSettings.getNotify();
+        return this.getNotifyIsModified() ? this.$notify : this.globalSettings.getNotify();
     }
     getNotifyIsModified() {
-        return !TypeGuards.isUndef(this.notify)
+        return !TypeGuards.isUndef(this.$notify)
     }
     getConfirm():boolean {
-        return this.getConfirmIsModified() ? this.confirm : this.globalSettings.getConfirm();
+        return this.getConfirmIsModified() ? this.$confirm : this.globalSettings.getConfirm();
     }
     getConfirmIsModified() {
-        return !TypeGuards.isUndef(this.confirm);
+        return !TypeGuards.isUndef(this.$confirm);
     }
     getWhitelisted():boolean {
-        return this.getWhitelistedIsModified() ? this.whitelisted : this.globalSettings.getWhitelisted();
+        return this.getWhitelistedIsModified() ? this.$whitelisted : this.globalSettings.getWhitelisted();
     }
     getWhitelistedIsModified() {
-        return !TypeGuards.isUndef(this.whitelisted);
+        return !TypeGuards.isUndef(this.$whitelisted);
     }
     getFakingMode():FakingModes {
-        return this.getFakingModeIsModified() ? this.fakingMode : this.globalSettings.getFakingMode();
+        return this.getFakingModeIsModified() ? this.$fakingMode : this.globalSettings.getFakingMode();
     }
     getFakingModeIsModified() {
-        return !TypeGuards.isUndef(this.fakingMode);
+        return !TypeGuards.isUndef(this.$fakingMode);
     }
     getUpdateInterval():number {
-        return this.getUpdateIntervalIsModified() ? this.updateInterval : this.globalSettings.getUpdateInterval();
+        return this.getUpdateIntervalIsModified() ? this.$updateInterval : this.globalSettings.getUpdateInterval();
     }
     getUpdateIntervalIsModified() {
-        return !TypeGuards.isUndef(this.updateInterval);
+        return !TypeGuards.isUndef(this.$updateInterval);
     }
-    getIsModified() {
+    getAnythingIsModified() {
         return this.getActionIsModified() ||
             this.getNotifyIsModified() ||
             this.getConfirmIsModified() ||
