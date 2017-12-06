@@ -166,14 +166,18 @@ gulp.task('build-ghpage',
     }
 );
 
-gulp.task('travis', ['build-ghpage', 'build-settings-html'],
-    () => {
-        return [
-            require('fs').writeFile('build/.nojekyll', ''),
-            gulp.src(['test/index.html', 'test/**/*.js']).pipe(gulp.dest(options['OUTPUT_PATH'] + '/test/')),
-            gulp.src('node_modules/mocha/mocha.*').pipe(gulp.dest(options['OUTPUT_PATH'] + '/node_modules/mocha/')),
-            gulp.src('node_modules/chai/chai.js').pipe(gulp.dest(options['OUTPUT_PATH'] + '/node_modules/chai/'))
-        ];
+gulp.task('tests-to-ghpage', () => {
+    return [
+        require('fs').writeFile('build/.nojekyll', ''),
+        gulp.src(['test/index.html', 'test/**/*.js']).pipe(gulp.dest(options['OUTPUT_PATH'] + '/test/')),
+        gulp.src('node_modules/mocha/mocha.*').pipe(gulp.dest(options['OUTPUT_PATH'] + '/node_modules/mocha/')),
+        gulp.src('node_modules/chai/chai.js').pipe(gulp.dest(options['OUTPUT_PATH'] + '/node_modules/chai/'))
+    ];
+})
+
+gulp.task('travis',
+    (done) => {
+        runSequence('build-ghpage', 'build-settings-html', 'tests-to-ghpage', done);
     }
 );
 
