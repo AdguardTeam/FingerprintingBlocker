@@ -102,7 +102,7 @@ export default class DomainSettingsStorage extends AbstractSettingsStorage imple
     }
 
     protected loadStats():void {
-        this.triggerLog = JSON.parse(GM_getValue(this.LOG_PREFIX + this.domain, '[]'));
+        this.triggerLog = [];
         const statsStringified = GM_getValue(this.STATS_PREFIX + this.domain);
         if (!TypeGuards.isUndef(statsStringified)) {
             const stats:IStoredStats = JSON.parse(statsStringified);
@@ -120,7 +120,6 @@ export default class DomainSettingsStorage extends AbstractSettingsStorage imple
 
     protected saveStats():void {
         if (this.stats.canvasBlockCount === 0 && this.stats.audioBlockCount === 0) { return; }
-        GM_setValue(this.LOG_PREFIX + this.domain, JSON.stringify(this.triggerLog));
         const stats:IStoredStats = {
             canvas: this.stats.canvasBlockCount,
             audio: this.stats.audioBlockCount

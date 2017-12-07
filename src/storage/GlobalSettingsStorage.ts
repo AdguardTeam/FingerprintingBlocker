@@ -87,15 +87,7 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
 
     protected loadStats():void {
         const domains = this.enumerateDomains();
-        /** @todo optimize this */
-        this.triggerLog = Array.prototype.concat.apply([], domains.map((domain) => {
-            return JSON.parse(GM_getValue(this.LOG_PREFIX + domain, '[]')).map(entry => {
-                entry.domain = domain;
-                return entry;
-            });
-        })).sort((a, b) => {
-            return b.date - a.date;
-        });
+        this.triggerLog = [];
         this.stats = domains.map((domain) => {
             return GM_getValue(this.STATS_PREFIX + domain);
         }).reduce((prev, current) => {

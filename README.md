@@ -1,4 +1,4 @@
-# FingerprintingBlocker
+# FingerprintingBlocker [![Build Status](https://travis-ci.org/AdguardTeam/FingerprintingBlocker.svg?branch=master)](https://travis-ci.org/AdguardTeam/FingerprintingBlocker)
 Fingerprinting blocker extension
 
 # Development build

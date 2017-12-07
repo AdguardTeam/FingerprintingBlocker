@@ -32,7 +32,6 @@ export default interface IStorage {
     getTriggerLog():ITriggerLog
     getStats():Readonly<IStats>
     appendEvent(evt:TBlockEvent, domain?:string):void
-    resetStatistics():void
     enumerateDomains?():string[]
 
     /**

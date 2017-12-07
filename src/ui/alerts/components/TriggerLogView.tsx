@@ -60,7 +60,7 @@ export default class TriggerLogView extends Component<ITriggerLogViewProps, any>
         return (
             <div class="popup__text">
                 <div>
-                    <div class="popup__back" onClick={this.onBackBtnClick}></div>
+                    <div class="popup__back" onClick={this.onBackBtnClick}>back icon</div>
                     <select value={String(state.selected)} onChange={this.onSelectionChange}>
                         {triggerLog.map((entry, index) => {
                             return <option value={String(index)}>

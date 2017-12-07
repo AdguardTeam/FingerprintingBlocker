@@ -77,7 +77,6 @@ export default abstract class AbstractSettingsStorage implements IStorage {
         return new Int32Array(buffer.buffer);
     }
 
-    protected readonly LOG_PREFIX = 'log#'
     protected readonly STATS_PREFIX = 'stats#'
     protected readonly GLOBAL_SETTINGS_KEY = 'settings'
     protected readonly now = Date.now
@@ -122,20 +121,11 @@ export default abstract class AbstractSettingsStorage implements IStorage {
         }
         this.saveStats();
     }
-    resetStatistics():void {
-        this.triggerLog = [];
-        this.stats = {
-            canvasBlockCount: 0,
-            audioBlockCount: 0
-        };
-        this.saveStats();
-    }
 
     enumerateDomains():string[] {
         let keys = GM_listValues();
         return keys.filter((key) => {
             return key !== this.GLOBAL_SETTINGS_KEY &&
-                key.indexOf(this.LOG_PREFIX) !== 0 &&
                 key.indexOf(this.STATS_PREFIX) !== 0;
         });
     }
