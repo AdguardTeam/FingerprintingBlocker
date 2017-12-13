@@ -81,7 +81,6 @@ export default abstract class AbstractSettingsStorage implements IStorage {
     protected readonly GLOBAL_SETTINGS_KEY = 'settings'
     protected readonly now = Date.now
 
-
     protected triggerLog:ITriggerLog
     protected stats:IStats
 

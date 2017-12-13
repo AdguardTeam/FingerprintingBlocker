@@ -1,14 +1,12 @@
+import { h, Component } from '../../preact'
 import { ICommonState } from './Alert'
 import BlockEvent, { Action, getApiName } from '../../../event/BlockEvent'
 import parseStack from '../../../stack/StackParseService'
 import * as options from '../../options/radio_input_options'
 import { bind, trustedEventListener } from '../../utils/event_listener_decorators'
-import IStorage from '../../../storage/IStorage';
+import IStorage from '../../../storage/IStorage'
 import Pages from './PagesEnum'
 import { getMessage } from '../../localization'
-
-const h = preact.h;
-const Component = preact.Component;
 
 interface IDetailsProps extends ICommonState {
     storage:IStorage
@@ -115,7 +113,7 @@ export default class Details extends Component<IDetailsProps, IDetailsState> {
                 </div>
                 <div class="popup__row">
                     <label>
-                        <input type="checkbox" checked={state.chosenNotify}/>
+                        <input type="checkbox" checked={state.chosenNotify} onClick={this.onNotifyCheckboxClick}/>
                         {getMessage("popup.notify_about_attempts")}
                     </label>
                     <div class="popup__text--paragraph">

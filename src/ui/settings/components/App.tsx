@@ -1,11 +1,9 @@
+import { h, Component } from '../../preact'
 import IStorage from '../../../storage/IStorage'
 import GlobalSettingsStorage from '../../../storage/GlobalSettingsStorage'
 import DomainSettingsStorage from '../../../storage/DomainSettingsStorage'
 import Settings from './Settings'
 import TypeGuards from '../../../shared/TypeGuards'
-
-const h = preact.h;
-const Component = preact.Component;
 
 const reDomain = /^\?d\=([^&]+)$/;
 function getDomainFromUrlQueryParam():string {

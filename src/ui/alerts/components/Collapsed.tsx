@@ -1,11 +1,9 @@
+import { h, Component } from '../../preact'
 import { ICommonState } from "./Alert";
 import TBlockEvent, { Action } from '../../../event/BlockEvent'
 import Pages from './PagesEnum'
 import { trustedEventListener } from "../../utils/event_listener_decorators";
 import { getMessage } from '../../localization'
-
-const h = preact.h;
-const Component = preact.Component;
 
 interface ICollapsedProps {
     latestEvent:TBlockEvent

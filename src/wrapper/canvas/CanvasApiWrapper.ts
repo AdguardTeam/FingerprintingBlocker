@@ -3,7 +3,7 @@ import IProxyService, { ApplyHandler } from '../../proxy/IProxyService';
 import IStorage from '../../storage/IStorage';
 import ICanvasProcessor from './ICanvasProcessor';
 import INotifier from '../../notifier/INotifier';
-
+import IResult from './IResult';
 import BlockEvent, { Apis, Action, CanvasBlockEvent, CanvasBlockEventType } from '../../event/BlockEvent';
 
 import TypeGuards from '../../shared/TypeGuards';
@@ -11,21 +11,23 @@ import * as log from '../../shared/log';
 
 import { crop } from './CanvasProcessor';
 import WeakMap from '../../third-party/weakmap';
+import { getMessage, formatText } from '../../ui/localization';
 
 export default class CanvasApiWrapper implements ICanvasApiWrapper {
 
-    private static MIN_CANVAS_SIZE_TO_FAKE = 128;
+    private static MIN_CANVAS_SIZE_TO_BLOCK = 256; // in pixels = 256 * 4 bytes
+    private static MIN_MODIFIED_BYTES_COUNT_TO_NOTIFY = 512;
 
     private canvasContextMap:IWeakMap<HTMLCanvasElement, TCanvasMode>
 
     /**
-     * Each canvas is assigned to an internal "mode", which is initially set to 'none', 
+     * Each canvas is assigned to an internal "mode", which is initially set to 'none',
      * and can be changed via calling `getContext` method.
      * Canvas is allowed to have only one mode. For example, once '2d' context is requested
      * by `getContext('2d')` call, subsequent calls with `getContext('webgl')` will return `null`.
      * This information is not available during calls for `toDataURL` and other methods,
      * so we track the attached context type by wrapping `HTMLCanvasElement#getContext` method.
-     * For the precise logic for `getContext`, we refer to 
+     * For the precise logic for `getContext`, we refer to
      * {@link https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-context-mode}
      */
     private trackCanvasContextStatus:ApplyHandler<HTMLCanvasElement,any> = (orig, __this, _arguments) => {
@@ -35,20 +37,17 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
         }
         return context;
     }
-
-    private anonymizeCanvasElementMethods:ApplyHandler<HTMLCanvasElement,any> = (orig, __this, _arguments) => {
+    private anonymizeCanvasElementMethods:ApplyHandler<HTMLCanvasElement,IResult<any>> = (orig, __this, _arguments) => {
         const contextType = this.canvasContextMap.get(__this);
+        let result:number = 0;
         if (contextType) {
             const {$data, $result} = this.canvasProcessor.clone2DCanvasWithNoise(__this, contextType);
-            if ($result) {
-                // this.notifier.onBlocked('Faked HTMLCanvasElement method');
-            }
+            result = $result;
             __this = $data;
         }
-        return orig.apply(__this, _arguments);
+        return { $data: orig.apply(__this, _arguments), $result: result };
     };
-
-    private anonymizeImageDataAccess:ApplyHandler<CanvasRenderingContext2D,ImageData> = (orig, __this:CanvasRenderingContext2D, _arguments):ImageData => {
+    private anonymizeImageDataAccess:ApplyHandler<CanvasRenderingContext2D,IResult<ImageData>> = (orig, __this:CanvasRenderingContext2D, _arguments) => {
         const sx:number = _arguments[0];
         const sy:number = _arguments[1];
         const sw:number = _arguments[2];
@@ -63,10 +62,10 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
 
         // Convert dimension of the obtained imageData.
         crop($data, 1, 1, sw, sh, sw + 2, sh + 2, imageData.data);
-        return imageData;
+        return { $data: imageData, $result };
     }
 
-    private anonymizeWebGLReadPixels:ApplyHandler<WebGLRenderingContext|WebGL2RenderingContext, void> = (orig, __this, _arguments) => {
+    private anonymizeWebGLReadPixels:ApplyHandler<WebGLRenderingContext|WebGL2RenderingContext, IResult<void>> = (orig, __this, _arguments) => {
         const sx:number = _arguments[0];
         const sy:number = _arguments[1];
         const sw:number = _arguments[2];
@@ -74,7 +73,6 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
         const format = _arguments[4];
         const type:number = _arguments[5];
         const pixels:ArrayBufferView = _arguments[6];
-
         const origWidth:number = __this.canvas.width;
         const origHeight:number = __this.canvas.height;
 
@@ -87,7 +85,7 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
                     const {$data, $result} = this.canvasProcessor.addNoiseToBitmap(writeToProcessorBuff, sx - 1, sy - 1, sw + 2, sh + 2, origWidth, origHeight);
 
                     crop($data, 1, 1, sw, sh, sw + 2, sh + 2, pixels);
-                    return;
+                    return { $result };
                 }
             }
             case __this.UNSIGNED_SHORT_5_6_5:
@@ -95,14 +93,14 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
             case __this.UNSIGNED_SHORT_4_4_4_4:
                 log.print('called WebGL(2)RenderingContext#readPixels with a type whose faking is not supported.');
             default:
-                return orig.apply(__this, _arguments);
-        }      
+                return { $result: 0 };
+        }
     }
 
     /**
      * Combines general apply handlers, so that in a resulting apply handler, we notify
      * users and apply appropriate blocking method depending on user settings.
-     * @param type 
+     * @param type
      * @param fake to be used when a setting is set to fake canvas output
      * @param block to be used when a setting is et to block output
      * @param getData to be used to retrieve original HTMLCanvasElement, which will be
@@ -110,7 +108,7 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
      */
     applyHandlerFactory<T,R> (
         type:CanvasBlockEventType,
-        fake:ApplyHandler<T,R>,
+        fake:ApplyHandler<T,IResult<R>>,
         block:ApplyHandler<T,R>,
         getData:(arg:T)=>HTMLCanvasElement,
         domain:string
@@ -121,30 +119,42 @@ export default class CanvasApiWrapper implements ICanvasApiWrapper {
             let canvas = getData(__this);
 
             breakThisToApplyOrig: {
-                if (canvas.width * canvas.height < CanvasApiWrapper.MIN_CANVAS_SIZE_TO_FAKE) {
+                if (canvas.width * canvas.height < CanvasApiWrapper.MIN_CANVAS_SIZE_TO_BLOCK) {
+                    log.print(`Allowing canvas readout for a canvas smaller than the minimum size...`);
                     break breakThisToApplyOrig;
                 }
-
                 if (this.storage.getConfirm()) {
                     // This is the message that FF shows.
                     // https://www.ghacks.net/2017/10/28/firefox-58-warns-you-if-sites-use-canvas-image-data/
-                    let msg = `Will you allow ${domain} to use your HTML5 canvas image data? This may be used to uniquely identify your computer.`;
+                    let msg = formatText(getMessage("confirm_msg"), {'domain': domain });
                     // Use a ui-blocking window.confirm
-                    if(window.confirm(msg)) {
+                    if(confirm(msg)) {
                         break breakThisToApplyOrig;
                     }
                 }
 
-                if (action === Action.ALLOW) {
-                    let blockEvent = new CanvasBlockEvent(type, Action.ALLOW, stack, canvas);
-                    this.notifier.onBlock(blockEvent);
-                    break breakThisToApplyOrig;
+                switch (action) {
+                    case Action.ALLOW:
+                        let blockEvent = new CanvasBlockEvent(type, action, stack, canvas);
+                        this.notifier.onBlock(blockEvent);
+                        break breakThisToApplyOrig;
+                    case Action.BLOCK: {
+                        let ret = block(orig, __this, _arguments);
+                        let blockEvent = new CanvasBlockEvent(type, action, stack, canvas);
+                        this.notifier.onBlock(blockEvent);
+                        return ret;
+                    }
+                    case Action.FAKE: {
+                        let { $data: ret, $result } = fake(orig, __this, _arguments);
+                        if ($result >= CanvasApiWrapper.MIN_MODIFIED_BYTES_COUNT_TO_NOTIFY) {
+                            let blockEvent = new CanvasBlockEvent(type, action, stack, canvas);
+                            this.notifier.onBlock(blockEvent);
+                        } else {
+                            log.print(`Modified pixel count is less than the minimum.`);
+                        }
+                        return ret;
+                    }
                 }
-
-                const ret = action === Action.FAKE ? fake(orig, __this, _arguments) : block(orig, __this, _arguments);
-                let blockEvent = new CanvasBlockEvent(type, action, stack, canvas);
-                this.notifier.onBlock(blockEvent);
-                return ret;
             }
 
             return <R>orig.apply(__this, _arguments);

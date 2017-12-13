@@ -16,7 +16,7 @@ function ln2(num:number):number {
     return i;
 }
 
-function nextValidHeapSize(realSize:number) {	
+function nextValidHeapSize(realSize:number) {
     if (!realSize || realSize <= SIZE_64_KB) {
         return SIZE_64_KB;
     } else if (realSize <= SIZE_64_MB) {
@@ -35,7 +35,7 @@ export function crop(data:Uint8Array|Uint8ClampedArray, x:number, y:number, w:nu
 }
 
 export default class CanvasProcessor implements ICanvasProcessor {
-    
+
     private static DATA_OFFSET = 0;
 
     private buffer:ArrayBuffer
@@ -102,7 +102,7 @@ export default class CanvasProcessor implements ICanvasProcessor {
         let result = this.noiseApplyer2D._apply_noise(CanvasProcessor.DATA_OFFSET, sx, sy, width, height, origWidth, origHeight, h[0], h[1], h[2], h[3]);
         let end = performance.now();
 
-        log.print("[FingerprintingBlocker]: total " + result + " values have been modified.");
+        log.print("Total " + result + " values have been modified.");
         log.print(`Elapsed: ${end - start} ms.`);
         log.print(`Canvas size was ${width} * ${height}`);
 

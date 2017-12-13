@@ -1,10 +1,8 @@
+import { h, Component } from '../../preact'
 import Pages from './PagesEnum'
 import { trustedEventListener } from '../../utils/event_listener_decorators'
 import { Action } from '../../../event/BlockEvent'
 import { getMessage } from '../../localization'
-
-const h = preact.h;
-const Component = preact.Component;
 
 interface ISaveSuccessProps {
     action:Action

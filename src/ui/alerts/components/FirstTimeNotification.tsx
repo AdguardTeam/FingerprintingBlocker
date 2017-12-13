@@ -1,3 +1,4 @@
+import { h, Component } from '../../preact'
 import BlockEvent, { Action } from '../../../event/BlockEvent';
 import IStats from '../../../storage/IStats';
 import { ICommonState } from './Alert';
@@ -5,9 +6,6 @@ import { bind, trustedEventListener } from '../../utils/event_listener_decorator
 import IStorage from '../../../storage/IStorage';
 import Pages from './PagesEnum'
 import { getMessage } from '../../localization'
-
-const h = preact.h;
-const Component = preact.Component;
 
 interface IFirstTimeNotificationProps {
     storage:IStorage

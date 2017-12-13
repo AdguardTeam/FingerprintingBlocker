@@ -4,7 +4,7 @@
  * This is a HACK for tsickle and closure compiler:
  *   1. Closure compiler does not support @define flags in ES6 module yet
  *      See {@link https://github.com/google/closure-compiler/issues/1601}
- *         - Using `goog.module.declareLegacyNamespace` as described in 
+ *         - Using `goog.module.declareLegacyNamespace` as described in
  *           {@link https://github.com/angular/tsickle/issues/434}
  *   2. Typescript does not sees `goog` namespace, and if declared, tsickle will include it
  *      in externs, which will colide with declarations that closure compiler already have
@@ -31,6 +31,7 @@ while (win.parent !== win) {
     win = win.parent;
     prefix += '-- ';
 }
+prefix += '[FingerprintingBlocker] '
 let loc = location.href;
 let suffix = `    (at ${loc})`;
 let depth = 0;
@@ -61,28 +62,23 @@ export function closeAllGroup() {
 
 export function print(str:string, obj?):void {
     if (PRINT_LOGS) {
-        let date = getTime().toFixed(3);
-        let indent = 10 - date.length;
-        if (indent < 0) { indent =0; }
-        let indentstr = '';
-        while (indent-- > 0) { indentstr += ' '; }
-        console.log(prefix + `[${indentstr}${date}]: ${str}${suffix}`);
+        console.log(prefix + `${str}${suffix}`);
         if (obj !== undefined) {
-            console.log(prefix + '=============================');
+            console.log('=============================');
             console.log(obj);
-            console.log(prefix + '=============================');
+            console.log('=============================');
         }
     }
 }
 
 /**
-* Accepts a function, and returns a wrapped function that calls `call` and `callEnd`
-* automatically before and after invoking the function, respectively.
-* @param fn A function to wrap
-* @param message 
-* @param cond optional argument, the function argument will be passed to `cond` function, and
-* its return value will determine whether to call `call` and `callEnd`.
-*/
+ * Accepts a function, and returns a wrapped function that calls `call` and `callEnd`
+ * automatically before and after invoking the function, respectively.
+ * @param fn A function to wrap
+ * @param message
+ * @param cond optional argument, the function argument will be passed to `cond` function,  and
+ * its return value will determine whether to call `call` and `callEnd`.
+ */
 export function connect<T extends (...args)=>any>(fn:T, message:string, cond?:(this:null)=>boolean):T {
     if (PRINT_LOGS) {
         return <T>function () {

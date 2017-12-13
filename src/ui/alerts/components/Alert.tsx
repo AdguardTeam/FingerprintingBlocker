@@ -1,28 +1,21 @@
-
+import { h, Component } from '../../preact'
 import IStorage, { IDomainSettingsStorage } from '../../../storage/IStorage'
 import TBlockEvent, { Action } from '../../../event/BlockEvent'
 import IStats from '../../../storage/IStats'
-
 import FirstTimeNotification from './FirstTimeNotification'
 import Collapsed from './Collapsed'
 import SaveSuccess from './SaveSuccess'
 import Details from './Details'
 import TriggerLogView from './TriggerLogView'
-
 import TypeGuards from '../../../shared/TypeGuards'
 import DomainSettingsStorage from '../../../storage/DomainSettingsStorage'
 import GlobalSettingsStorage from '../../../storage/GlobalSettingsStorage'
 import { bind, trustedEventListener } from '../../utils/event_listener_decorators'
-
 import Pages from './PagesEnum'
-
-const h = preact.h;
-const Component = preact.Component;
 
 export interface ICommonState {
     action:Action
     notify:boolean
-
     latestEvent:TBlockEvent
 }
 

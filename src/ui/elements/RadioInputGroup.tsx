@@ -1,5 +1,4 @@
-const h = preact.h;
-const Component = preact.Component; 
+import { h, Component } from '../preact'
 
 interface IRadioInputGroupProps {
     options:{label:string, id:any}[]

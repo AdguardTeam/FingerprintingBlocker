@@ -54,7 +54,7 @@ export default class SharedObjectProvider implements ISharedObjectProvider {
             try {
                 let contentWin:Window = this.getContentWindow.call(__this);
                 if (contentWin.location.protocol === ABOUT_PROTOCOL) {
-                    log.print("SharedObjectProvider: new child context encountered.", __this);
+                    log.print("SharedObjectProvider: new child context encountered.", __this.outerHTML);
                     this.frameToDocument.set(__this, contentWin.document);
                     this.processChildWindow(contentWin);
                     /**

@@ -1,12 +1,31 @@
 # FingerprintingBlocker [![Build Status](https://travis-ci.org/AdguardTeam/FingerprintingBlocker.svg?branch=master)](https://travis-ci.org/AdguardTeam/FingerprintingBlocker)
 Fingerprinting blocker extension
+## Summary
 
-# Development build
+FingerprintingBlocker is a userscript that prevents fingerprinting attempts.
+
+## Key features:
+
+ * Prevents canvas fingerprinting 
+
+ * Cross-browser support
+ * Fully configurable behavior
+   - per-site settings
+ * Invisible to other scripts
+
+## Installation
+ - If you are using a standalone AdGuard app that supports userscripts, you can install it in it.
+To use with browser extensions,
+ - For Firefox, it is designed to operate with Tampermonkey. We have made it work with Greasemonkey for our another project [PopupBlocker](https://github.com/AdguardTeam/PopupBlocker), but we have dropped its support due to design complexity that would incur for supporting it.
+ - Otherwise, it will work with any userscript extension.
+ - If you are using Chrome and using FingerprintingBlocker in _Faking mode_, it is recommended to enable a flag [Experimental Validate Asm.js and convert to WebAssembly when valid.](chrome://flags/#enable-asm-webassembly).
+
+## Development build
 
 Built automatically on every new commit: https://AdguardTeam.github.io/FingerprintingBlocker/fingerprintingblocker.user.js
 Unit test for dev build is [here](https://AdguardTeam.github.io/FingerprintingBlocker/test/).
 
-# How to build
+## How to build
 
 Install the package by running:
 ```

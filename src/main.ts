@@ -45,7 +45,7 @@ if (!window.hasOwnProperty(globalKey)) {
     delete window[globalKey];
 }
 
-if (location.protocol === 'file:' || location.href === 'https://adguardteam.github.io/FingerprintingBlocker/settings.html') {
+if (location.href === 'https://adguardteam.github.io/FingerprintingBlocker/settings.html') {
     window['GM_getValue'] = GM_getValue;
     window['GM_setValue'] = GM_setValue;
     window['GM_listValues'] = GM_listValues;

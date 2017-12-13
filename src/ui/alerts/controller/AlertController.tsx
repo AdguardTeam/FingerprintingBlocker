@@ -1,3 +1,4 @@
+import { h, Component, render } from '../../preact'
 import IAlertController from './IAlertController'
 import IStorage, { IGlobalSettingsStorage } from '../../../storage/IStorage'
 import TBlockEvent from '../../../event/BlockEvent'
@@ -6,10 +7,6 @@ import { IAlertData } from '../message'
 import Alert from '../components/Alert'
 import Pages from '../components/PagesEnum'
 import * as log from '../../../shared/log'
-
-const h = preact.h;
-const Component = preact.Component;
-const render = preact.render;
 
 const px = 'px';
 

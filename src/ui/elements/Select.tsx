@@ -1,7 +1,5 @@
+import { h, Component } from '../preact'
 import TypeGuards from '../../shared/TypeGuards'
-
-const h = preact.h;
-const Component = preact.Component;
 
 interface ISelectProps {
     initialValue:string
