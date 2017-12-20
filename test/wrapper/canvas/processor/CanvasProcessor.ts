@@ -1,21 +1,9 @@
-import CanvasProcessor, { crop } from '../../../src/wrapper/canvas/CanvasProcessor';
-import dummyStorageObject from '../../storage/StorageProvider';
+import CanvasProcessor, { crop, createImageData } from '../../../../src/wrapper/canvas/processor/CanvasProcessor';
+import dummyStorageObject from '../../../storage/Storage';
 
 const expect = chai.expect;
 
 const crypto:Crypto = window.crypto || window['msCrypto'];
-
-function createImageData(w:number, h:number):ImageData {
-    try {
-        return new ImageData(w, h);
-    } catch(e) {
-        // IE does not support ImageData constructor
-        let canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        return canvas.getContext('2d').getImageData(0, 0, w, h);
-    }
-}
 
 function getRandomImageData(x?:number, y?:number):ImageData {
     x = x || Math.floor(Math.random() * 27) + 101;
@@ -86,7 +74,7 @@ describe('CanvasProcessor', function() {
         let end1 = performance.now();
 
         // Replace a module exposed in the global scope that CanvasProcessor uses
-        window['noiseApplyerModule2D'] = window['noiseApplyerModule2D_plainJs'];
+        window['bitmapNoiseApplier'] = window['bitmapNoiseApplier_plainJs'];
 
         let start2 = performance.now();
         for (let i = 0; i < ITERATION; i++) {

@@ -1,1 +1,1 @@
-import './wrapper/canvas/CanvasProcessor';
+import './wrapper/canvas/processor/CanvasProcessor';

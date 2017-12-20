@@ -14,7 +14,7 @@
  * 
  * @todo convert it to asm.js.
  */
-function noiseApplyerModule2D_plainJs (stdlib, ffi, heap) {
+function bitmapNoiseApplier_plainJs (stdlib, ffi, heap) {
     var data = new stdlib.Uint8Array(heap);
     
     function apply_noise(_, sx, sy, w, h, orig_w, orig_h, h0, h1, h2, h3) {
