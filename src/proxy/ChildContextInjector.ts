@@ -1,40 +1,31 @@
-import ISharedObjectProvider from './ISharedObjectProvider';
+import IChildContextInjector from "./IChildContextInjector";
 import IProxyService, { ApplyHandler } from './IProxyService';
 import { ABOUT_PROTOCOL } from '../shared/dom'
 import TypeGuards from '../shared/TypeGuards';
 import * as log from '../shared/log';
 import { isSameOrigin } from '../shared/url';
-import WeakMap from '../third-party/weakmap';
+import WeakMap from '../shared/WeakMap';
 
-export default class SharedObjectProvider implements ISharedObjectProvider {
-    private sharedObject:any[]
-    private received:boolean
+export default class ChildContextInjector implements IChildContextInjector {
     /**
      * A Weakmap instance that maps iframe elements to its contentDocument.
      * If an iframe's contentDocument is not available, it is mapped to `null`.
      */
     private frameToDocument:IWeakMap<HTMLIFrameElement, Document>
-
+    
     private getContentWindow:(this:HTMLIFrameElement)=>Window
     private getContentDocument:(this:HTMLIFrameElement)=>Document
-    private proxyService:IProxyService
 
-    constructor(private $window:Window, private callback:(win:Window)=>any, private KEY:string, private globalKey:string) {
-        if (this.sharedObject = $window[KEY]) {
-            this.received = true;
-        } else {
-            this.sharedObject = [];
-            this.received = false;
-        }
-    }
-    registerObject<T>(key:number, ctor:{new():T}):T {
-        if (this.received) {
-            return <T>this.sharedObject[key];
-        } else {
-            return (this.sharedObject[key] = new ctor);
-        }
-    }
-    initialize(proxyService:IProxyService) {
+    private callbacks:func[] = [];
+
+    constructor(
+        private $window:Window,
+        proxyService:IProxyService,
+        private globalKey:string
+    ) {
+        this.onFrameLoad = this.onFrameLoad.bind(this);
+
+        // Initialize
         const iframePType = this.$window.HTMLIFrameElement.prototype;
         this.getContentWindow = Object.getOwnPropertyDescriptor(iframePType, 'contentWindow').get;
         this.getContentDocument = Object.getOwnPropertyDescriptor(iframePType, 'contentDocument').get;
@@ -43,18 +34,17 @@ export default class SharedObjectProvider implements ISharedObjectProvider {
         proxyService.wrapAccessor(iframePType, 'contentWindow', this.executeCodeOnGet);
         proxyService.wrapAccessor(iframePType, 'contentDocument', this.executeCodeOnGet);
     }
+
     private executeCodeOnGet:ApplyHandler<HTMLIFrameElement, any> = (_get:(this:HTMLIFrameElement)=>any, __this) => {
         let prevDoc = this.frameToDocument.get(__this);
         if (TypeGuards.isUndef(prevDoc)) {
             // New iframe elements
-            log.print("SharedObjectProvider: attaching an event listener to a first met frame");
-            __this.addEventListener('load', () => {
-                this.onFrameLoad(__this);
-            });
+            log.print("ChildContextInjector: attaching an event listener to a first met frame");
+            __this.addEventListener('load', this.onFrameLoad);
             try {
                 let contentWin:Window = this.getContentWindow.call(__this);
                 if (contentWin.location.protocol === ABOUT_PROTOCOL) {
-                    log.print("SharedObjectProvider: new child context encountered.", __this.outerHTML);
+                    log.print("ChildContextInjector: new child context encountered.", __this.outerHTML);
                     this.frameToDocument.set(__this, contentWin.document);
                     this.processChildWindow(contentWin);
                     /**
@@ -77,8 +67,8 @@ export default class SharedObjectProvider implements ISharedObjectProvider {
                      */
                     let src = __this.src;
                     if (src && this.globalKey && isSameOrigin(src, this.$window.location, this.$window.document.domain)) {
-                        log.print("SharedObjectProvider: setting globalKey");
-                        SharedObjectProvider.setNonEnumerableValue(contentWin, this.globalKey, undefined);
+                        log.print("ChildContextInjector: setting globalKey");
+                        ChildContextInjector.setNonEnumerableValue(contentWin, this.globalKey, undefined);
                     }
                 }
             } catch(e) {
@@ -93,17 +83,19 @@ export default class SharedObjectProvider implements ISharedObjectProvider {
      * CORS restrictions.
      */
     private processChildWindow(childWindow:Window) {
-        SharedObjectProvider.setNonEnumerableValue(childWindow, this.KEY, this.sharedObject);
-        this.callback(childWindow);
-        delete childWindow[this.KEY];
+        const callbacks = this.callbacks;
+        for (let i = 0, l = callbacks.length; i < l; i++) {
+            callbacks[i](childWindow);
+        }
     }
-    private onFrameLoad(iframe:HTMLIFrameElement) {
+    private onFrameLoad(evt:Event) {
+        const iframe = <HTMLIFrameElement>evt.target;
         try {
             let document:Document = this.getContentDocument.call(iframe);
             // If a loaded document has empty location, and it is different from the previous document,
             // We execute the callback again.
             if (document.location.protocol === ABOUT_PROTOCOL && this.frameToDocument.get(iframe) !== document) {
-                log.print("SharedObjectProvider: a content of an empty iframe has changed.");
+                log.print("ChildContextInjector: a content of an empty iframe has changed.");
                 this.frameToDocument.set(iframe, document);
                 this.processChildWindow(document.defaultView);
             }
@@ -111,10 +103,15 @@ export default class SharedObjectProvider implements ISharedObjectProvider {
             this.frameToDocument.set(iframe, null);
         }
     }
+
     private static setNonEnumerableValue(owner:object, prop:string, value:any) {
         Object.defineProperty(owner, prop, {
             value,
             configurable: true
         });
+    }
+
+    registerCallback(callback:(win:Window)=>void):void {
+        this.callbacks.push(callback);
     }
 }

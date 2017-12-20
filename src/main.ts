@@ -1,50 +1,60 @@
 import GlobalSettingsStorage from './storage/GlobalSettingsStorage';
 import DomainSettingsStorage from './storage/DomainSettingsStorage';
-
-import Notifier from './notifier/Notifier';
-import SharedObjectProvider from './proxy/SharedObjectProvider';
 import ProxyService from './proxy/ProxyService';
+import ChildContextInjector from './proxy/ChildContextInjector';
+import Notifier from './notifier/Notifier';
 import InterContextMessageHub from './messaging/InterContextMessageHub';
-import CanvasProcessor from './wrapper/canvas/CanvasProcessor';
-import CanvasApiWrapper from './wrapper/canvas/CanvasApiWrapper';
-
+import CanvasProcessor from './wrapper/canvas/processor/CanvasProcessor';
+import CanvasModeTracker from './wrapper/canvas/mode_tracker/CanvasModeTracker';
+import AudioProcessor from './wrapper/audio/processor/AudioProcessor';
+import AudioBufferCache from './wrapper/audio/audio_buffer_tracker/AudioBufferCache';
+import ApiWrapper from './wrapper/ApiWrapper';
 import AlertController from './ui/alerts/controller/AlertController';
 
 const window = unsafeWindow.window;
 
 const globalSettings = new GlobalSettingsStorage().init();
-const domainSettings = globalSettings.getDomainStorage(location.hostname).init();
+const domainSettings = globalSettings.getDomainStorage(location.hostname);
 
-const sessionKey = Math.random().toString(36).substr(2);
 const globalKey = globalSettings.globalKey;
 
-// `globalKey` is used to indicate that the userscript has been run
+// globalKey is used to indicate that the userscript has been run
 // from the parent context which has the same origin.
 // See SharedObjectProvider implementation.
 if (!window.hasOwnProperty(globalKey)) {
-    const canvasProcessor   = new CanvasProcessor(domainSettings, window);
+    const proxyService      = new ProxyService();
+    const injector          = new ChildContextInjector(window, proxyService, globalKey);
     const messageHub        = new InterContextMessageHub(window);
     const alertController   = new AlertController(globalSettings);
     const notifier          = new Notifier(messageHub, domainSettings, alertController);
 
+    const canvasProcessor   = new CanvasProcessor(domainSettings, window);
+    const canvasModeTracker = new CanvasModeTracker(proxyService);
+    const audioProcessor    = new AudioProcessor(domainSettings, window);
+    const audioBufferCache  = new AudioBufferCache(proxyService);
+
+    const apiWrapper        = new ApiWrapper(proxyService, domainSettings, notifier, canvasProcessor, canvasModeTracker, audioProcessor, audioBufferCache);
+
     const main = (window:Window) => {
-        const sharedObjectProvider  = new SharedObjectProvider(window, inIframe, sessionKey, globalKey);
-        const proxyService          = new ProxyService(false, sharedObjectProvider);
-        sharedObjectProvider.initialize(proxyService);
-        const canvasApiWrapper      = new CanvasApiWrapper(proxyService, domainSettings, canvasProcessor, notifier);
-        canvasApiWrapper.$apply(window);
-    }
+        proxyService.$apply(window);
+        apiWrapper.$apply(window);
+    };
 
     const inIframe = (window:Window) => {
         main(window);
+        // Establishes a bridging message channel,
+        // won't directly assign callbacks to this instance.
         new InterContextMessageHub(window, messageHub);
-    }
+    };
+
+    injector.registerCallback(inIframe);
 
     main(window);
 } else {
     delete window[globalKey];
 }
 
+// Expose for the settings page.
 if (location.href === 'https://adguardteam.github.io/FingerprintingBlocker/settings.html') {
     window['GM_getValue'] = GM_getValue;
     window['GM_setValue'] = GM_setValue;

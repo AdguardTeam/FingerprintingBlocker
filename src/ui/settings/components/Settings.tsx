@@ -26,7 +26,6 @@ export default class GlobalSettings extends Component<ISettingsProps, ISettingsS
         };
         this.onActionChange = this.onActionChange.bind(this);
         this.onNotifyChange = this.onNotifyChange.bind(this);
-        this.onConfirmChange = this.onConfirmChange.bind(this);
         this.onWhitelistedChange = this.onWhitelistedChange.bind(this);
         this.onFakingModechange = this.onFakingModechange.bind(this);
         this.onDomainSelectionChange = this.onDomainSelectionChange.bind(this);
@@ -37,10 +36,6 @@ export default class GlobalSettings extends Component<ISettingsProps, ISettingsS
     }
     private onNotifyChange(notify:boolean) {
         this.props.storage.setNotify(notify);
-        this.setState({});
-    }
-    private onConfirmChange(confirm:boolean) {
-        this.props.storage.setConfirm(confirm);
         this.setState({});
     }
     private onWhitelistedChange(whitelisted:boolean) {
@@ -96,18 +91,6 @@ export default class GlobalSettings extends Component<ISettingsProps, ISettingsS
                                 options={radioInputOptions.SHOW_OPTIONS}
                                 selected={props.storage.getNotify()}
                                 onRadioInputClick={this.onNotifyChange}
-                            />
-                        </div>
-                    </div>
-                    <div class="settings__row">
-                        <div class="settings__label settings__col">
-                            Confirmation dialog
-                        </div>
-                        <div class="settings__col">
-                            <RadioInputGroup
-                                options={radioInputOptions.SHOW_OPTIONS}
-                                selected={props.storage.getConfirm()}
-                                onRadioInputClick={this.onConfirmChange}
                             />
                         </div>
                     </div>

@@ -1,4 +1,4 @@
-interface INoiseApplyer {
+interface IBitmapNoiseApplier {
     /**
      * Apply noise to a canvas imageData.
      * @param x x-coord in which `data` is extracted from
@@ -13,4 +13,4 @@ interface INoiseApplyer {
     _apply_noise(ptr:number, x:number, y:number, w:number, h:number, orig_w:number, orig_h:number, h0:number, h1:number, h2:number, h3:number):number
 }
 
-declare function noiseApplyerModule2D(stdlib:Window, ffi:any, heap:ArrayBuffer):INoiseApplyer
+declare function bitmapNoiseApplier(stdlib:Window, ffi:any, heap:ArrayBuffer):IBitmapNoiseApplier

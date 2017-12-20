@@ -22,11 +22,19 @@ const canvasApiName = [
 ];
 
 export const enum AudioBlockEventType {
-    GET_CHANNEL_DATA
+    GET_CHANNEL_DATA,
+    GET_FLOAT_FREQUENCY_DATA,
+    GET_FLOAT_TIME_DOMAIN_DATA,
+    GET_BYTE_FREQUENCY_DATA,
+    GET_BYTE_TIME_DOMAIN_DATA,
 }
 
 const audioApiName = [
-    'AudioBuffer#getChannelData'
+    'AudioBuffer#getChannelData',
+    'AnalyserNode#getFloatFrequencyData',
+    'AnalyserNode#getFloatTimeDomainData',
+    'AnalyserNode#getByteFrequencyData',
+    'AnalyserNode#getByteTimeDomainData'
 ];
 
 export type EventType = CanvasBlockEventType | AudioBlockEventType;

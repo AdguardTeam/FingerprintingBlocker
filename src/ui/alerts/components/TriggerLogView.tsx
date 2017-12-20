@@ -58,20 +58,20 @@ export default class TriggerLogView extends Component<ITriggerLogViewProps, any>
         return (
             <div class="popup__text">
                 <div>
-                    <div class="popup__back" onClick={this.onBackBtnClick}>back icon</div>
+                    <div class="popup__back" onClick={this.onBackBtnClick}>back</div>
                     <select value={String(state.selected)} onChange={this.onSelectionChange}>
                         {triggerLog.map((entry, index) => {
                             return <option value={String(index)}>
                                 {this.getElapsedTimeRepresentation(entry.date) + ' ' }
                                 <div class="popup__text-api">
-                                    {getApiName(entry.api, entry.type)}}
+                                    {getApiName(entry.api, entry.type)}
                                 </div>
                             </option>
                         })}
                     </select>
                 </div>
                 <div>
-                    <textarea>
+                    <textarea class="popup__stack" rows={10} cols={45}>
                         {triggerLog[state.selected].stack}
                     </textarea>
                 </div>

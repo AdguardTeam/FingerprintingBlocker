@@ -8,22 +8,19 @@ interface IDomainSettings {
      */
     notify?:boolean,
     /**
-     * Show a confirmation dialog before taking action.
-     */
-    confirm?:boolean,
-    /**
      * Completely whitelist the domain.
      * If set, we will not wrap apis at all.
      */
     whitelisted?:boolean,
-    /**
-     * 
-     */
     fakingMode?:number,
-    /**
-     * 
-     */
     updateInterval?:number
+
+    salt?:string,
+    /**
+     * @member lastUpdated indicates the latest time when the hash was updated.
+     */
+    lastUpdated?:number,
+    
 }
 
 interface IGlobalSettings {
@@ -35,15 +32,11 @@ interface IGlobalSettings {
      */
     defaultAction:number,
     defaultNotify:boolean,
-    defaultConfirm:boolean,
     defaultWhitelisted:boolean,
     defaultFakingMode:number,
     defaultUpdateInterval:number
 
-    hash:string,
-    /**
-     * @member lastUpdated indicates the latest time when the hash was updated.
-     */
+    defaultSalt:string,
     lastUpdated:number,
     /**
      * A string to be used as a flag variable, independent to the hash,

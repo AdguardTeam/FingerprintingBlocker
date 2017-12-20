@@ -7,14 +7,12 @@ export default interface IStorage {
 
     getAction():Action
     getNotify():boolean
-    getConfirm():boolean
     getWhitelisted():boolean
     getFakingMode():FakingModes
     getUpdateInterval():number
 
     setAction(action:Action):void
     setNotify(notify:boolean):void
-    setConfirm(confirm:boolean):void
     setWhitelisted(whitelisted:boolean):void
     setFakingmode(fakingMode:FakingModes):void
     setUpdateInterval(updateInterval:number):void
@@ -30,7 +28,7 @@ export default interface IStorage {
      * @todo make this api asynchronous
      */
     getTriggerLog():ITriggerLog
-    getStats():Readonly<IStats>
+    getStat():Readonly<IStats>
     appendEvent(evt:TBlockEvent, domain?:string):void
     enumerateDomains?():string[]
 
@@ -62,7 +60,6 @@ export interface IDomainSettingsStorage extends IStorage {
      */
     getActionIsModified():boolean
     getNotifyIsModified():boolean
-    getConfirmIsModified():boolean
     getWhitelistedIsModified():boolean
     getFakingModeIsModified():boolean
     getUpdateIntervalIsModified():boolean

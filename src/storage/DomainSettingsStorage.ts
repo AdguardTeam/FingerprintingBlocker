@@ -18,10 +18,15 @@ export default class DomainSettingsStorage extends AbstractSettingsStorage imple
         const domainSettings =  <IDomainSettings>JSON.parse(domainSettingsStringified);
         this.$action = domainSettings.action;
         this.$notify = domainSettings.notify;
-        this.$confirm = domainSettings.confirm;
         this.$whitelisted = domainSettings.whitelisted;
         this.$fakingMode = domainSettings.fakingMode;
         this.$updateInterval = domainSettings.updateInterval;
+
+        if (!TypeGuards.isUndef(domainSettings.salt)) {
+            this.$salt = new Int32Array(32);
+            base64.decode(domainSettings.salt, new Uint8Array(this.$salt.buffer));
+            this.$lastUpdated = domainSettings.lastUpdated;
+        }
     }
 
     protected save() {
@@ -35,10 +40,6 @@ export default class DomainSettingsStorage extends AbstractSettingsStorage imple
             hasSpecificSettings = true;
             domainSettings.notify = this.$notify;
         }
-        if (!TypeGuards.isUndef(this.$confirm)) {
-            hasSpecificSettings = true;
-            domainSettings.confirm = this.$confirm;
-        }
         if (!TypeGuards.isUndef(this.$whitelisted)) {
             hasSpecificSettings = true;
             domainSettings.whitelisted = this.$whitelisted;
@@ -46,6 +47,11 @@ export default class DomainSettingsStorage extends AbstractSettingsStorage imple
         if (!TypeGuards.isUndef(this.$fakingMode)) {
             hasSpecificSettings = true;
             domainSettings.fakingMode = this.$fakingMode;
+        }
+        if (!TypeGuards.isUndef(this.$salt)) {
+            hasSpecificSettings = true;
+            domainSettings.salt = base64.encode(new Uint8Array(this.$salt.buffer));
+            domainSettings.lastUpdated = this.$lastUpdated;
         }
         if (!TypeGuards.isUndef(this.$updateInterval)) {
             hasSpecificSettings = true;
@@ -68,12 +74,6 @@ export default class DomainSettingsStorage extends AbstractSettingsStorage imple
     getNotifyIsModified() {
         return !TypeGuards.isUndef(this.$notify)
     }
-    getConfirm():boolean {
-        return this.getConfirmIsModified() ? this.$confirm : this.globalSettings.getConfirm();
-    }
-    getConfirmIsModified() {
-        return !TypeGuards.isUndef(this.$confirm);
-    }
     getWhitelisted():boolean {
         return this.getWhitelistedIsModified() ? this.$whitelisted : this.globalSettings.getWhitelisted();
     }
@@ -95,13 +95,12 @@ export default class DomainSettingsStorage extends AbstractSettingsStorage imple
     getAnythingIsModified() {
         return this.getActionIsModified() ||
             this.getNotifyIsModified() ||
-            this.getConfirmIsModified() ||
             this.getWhitelistedIsModified() ||
             this.getFakingModeIsModified() ||
             this.getUpdateIntervalIsModified();
     }
 
-    protected loadStats():void {
+    protected loadStat():void {
         this.triggerLog = [];
         const statsStringified = GM_getValue(this.STATS_PREFIX + this.domain);
         if (!TypeGuards.isUndef(statsStringified)) {
@@ -118,7 +117,7 @@ export default class DomainSettingsStorage extends AbstractSettingsStorage imple
         }
     }
 
-    protected saveStats():void {
+    protected saveStat():void {
         if (this.stats.canvasBlockCount === 0 && this.stats.audioBlockCount === 0) { return; }
         const stats:IStoredStats = {
             canvas: this.stats.canvasBlockCount,

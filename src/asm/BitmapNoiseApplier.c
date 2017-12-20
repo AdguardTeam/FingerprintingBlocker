@@ -21,7 +21,7 @@ int min(int a, int b) {
     }
 }
 
-_Bool get_hash(long pos, long h0, long h1, long h2, long h3) {
+_Bool get_salt(long pos, long h0, long h1, long h2, long h3) {
     char res = pos & 127;
     if (res >= 96) {
         return h3 & (1 << (res - 96));
@@ -58,7 +58,7 @@ int apply_noise(unsigned char *data, int x, int y, int w, int h, int orig_w, int
 
                     long pos = ((ix + x + (iy + y) * orig_w) << 2) + i;
 
-                    _Bool bit = get_hash(pos, h0, h1, h2, h3);
+                    _Bool bit = get_salt(pos, h0, h1, h2, h3);
 
                     if (dx == 0 && dy == 0) {
                         continue;

@@ -1,4 +1,5 @@
 declare interface Window {
+    Function:FunctionConstructor
     HTMLCanvasElement: typeof HTMLCanvasElement
     HTMLIFrameElement: typeof HTMLIFrameElement
     CanvasRenderingContext2D?: typeof CanvasRenderingContext2D

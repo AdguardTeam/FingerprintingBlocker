@@ -1,4 +1,4 @@
-var noiseApplyerModule2D = function(global, env, buffer) {
+var bitmapNoiseApplier = function(global, env, buffer) {
  "use asm";
  var a = new global.Int8Array(buffer);
  var d = new global.Uint8Array(buffer);

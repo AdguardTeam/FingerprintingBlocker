@@ -1,30 +1,9 @@
 import ICanvasProcessor from './ICanvasProcessor';
 import IResult from './IResult';
-import IStorage from '../../storage/IStorage';
-import * as log from '../../shared/log';
-
-// https://gist.github.com/wellcaffeinated/5399067#gistcomment-1364265
-const SIZE_64_KB = 65536;     // This equals to the size of 128 * 128 canvas.
-const SIZE_64_MB = 67108864;
-
-/**
- * Returns `Math.ceil(log_2(num))` for positive integer `num`.
- */
-function ln2(num:number):number {
-    let i = 0;
-    for (num--; num !== 0; i++) { num = num >> 1; }
-    return i;
-}
-
-function nextValidHeapSize(realSize:number) {
-    if (!realSize || realSize <= SIZE_64_KB) {
-        return SIZE_64_KB;
-    } else if (realSize <= SIZE_64_MB) {
-        return 1 << ln2(realSize);
-    } else {
-          return SIZE_64_MB * Math.ceil(realSize/SIZE_64_MB);
-    }
-}
+import IStorage from '../../../storage/IStorage';
+import * as log from '../../../shared/log';
+import IBufferManager from '../../arraybuffer/IBufferManager';
+import BufferManager from '../../arraybuffer/BufferManager';
 
 export function crop(data:Uint8Array|Uint8ClampedArray, x:number, y:number, w:number, h:number, orig_w:number, orig_h:number, translated:Uint8Array|Uint8ClampedArray):void {
     for (let origOffset = (y * orig_w + x) << 2, targetOffset = 0, counter = 0;
@@ -34,18 +13,26 @@ export function crop(data:Uint8Array|Uint8ClampedArray, x:number, y:number, w:nu
     }
 }
 
-export default class CanvasProcessor implements ICanvasProcessor {
+export function createImageData(w:number, h:number):ImageData {
+    try {
+        return new ImageData(w, h);
+    } catch(e) {
+        // IE does not support ImageData constructor
+        let canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        return canvas.getContext('2d').getImageData(0, 0, w, h);
+    }
+}
 
+export default class CanvasProcessor implements ICanvasProcessor {
     private static DATA_OFFSET = 0;
 
-    private buffer:ArrayBuffer
-    private bufferBytesLength:number
-
-    private data8:Uint8Array
-
-    private noiseApplyer2D:INoiseApplyer
+    private bufferManager:IBufferManager
+    private noiseApplyer2D:IBitmapNoiseApplier
 
     constructor(private storage:IStorage, private $window:Window) {
+        this.bufferManager = BufferManager.getInstance();
         // Stores native methods here, which will be overridden later.
         this.getContext = HTMLCanvasElement.prototype.getContext;
         this.getImageData = CanvasRenderingContext2D.prototype.getImageData;
@@ -58,21 +45,10 @@ export default class CanvasProcessor implements ICanvasProcessor {
     private getImageData:typeof CanvasRenderingContext2D.prototype.getImageData
     private getContextOffscreen:typeof OffscreenCanvas.prototype.getContext
 
-    private initialize2DNoiser(size?:number) {
-        let bufferSize = nextValidHeapSize(size);
-        // Grow buffer size if needed.
-        if (!this.buffer || size > this.bufferBytesLength) {
-            this.buffer = new ArrayBuffer(bufferSize);
-            this.bufferBytesLength = bufferSize;
-            this.data8 = new Uint8Array(this.buffer);
-
-            // IE does not support Math.imul, which is required by noise applier.
-            if (typeof this.$window.Math.imul !== 'function') {
-                this.$window.Math.imul = imul;
-            }
-
+    private initialize2DNoiser(size:number) {
+        if (!this.noiseApplyer2D || size > this.bufferManager.buffer.byteLength) {
             let init_start = performance.now();
-            this.noiseApplyer2D = noiseApplyerModule2D(this.$window, null, this.buffer);
+            this.noiseApplyer2D = this.bufferManager.getModule(size, this.$window, bitmapNoiseApplier);
             let init_end = performance.now();
             log.print(`Initializing noiser took ${init_end - init_start} ms.`);
         }
@@ -94,7 +70,7 @@ export default class CanvasProcessor implements ICanvasProcessor {
 
         this.initialize2DNoiser(bufferSize);
 
-        writeBuffCb(this.data8);
+        writeBuffCb(new Uint8Array(this.bufferManager.buffer));
 
         let h = this.storage.getSalt();
 
@@ -107,7 +83,7 @@ export default class CanvasProcessor implements ICanvasProcessor {
         log.print(`Canvas size was ${width} * ${height}`);
 
         return {
-            $data: new Uint8Array(this.buffer, CanvasProcessor.DATA_OFFSET, dataSize),
+            $data: new Uint8Array(this.bufferManager.buffer, CanvasProcessor.DATA_OFFSET, dataSize),
             $result: result //this.resultBuffer32[0]
         };
     }
@@ -154,16 +130,3 @@ export default class CanvasProcessor implements ICanvasProcessor {
         }
     }
 }
-
-/**
- * Polyfill of Math.imul for IE.
- */
-function imul(a:number, b:number):number {
-    var ah = (a >>> 16) & 0xffff;
-    var al = a & 0xffff;
-    var bh = (b >>> 16) & 0xffff;
-    var bl = b & 0xffff;
-    // the shift by 0 fixes the sign on the high part
-    // the final |0 converts the unsigned value into a signed value
-    return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0)|0);
-};

@@ -1,18 +1,9 @@
 import IProxyService, { ApplyHandler } from './IProxyService';
-import ISharedObjectProvider from './ISharedObjectProvider';
-import WeakMap from '../third-party/weakmap';
+import WeakMap from '../shared/WeakMap';
 
 export default class ProxyService implements IProxyService {
-    private proxyToReal:IWeakMap<any, any>
-    private realToProxy:IWeakMap<any, any>
-
-    constructor (private use_proxy:boolean, sharedObjectProvider:ISharedObjectProvider) {
-        this.proxyToReal = sharedObjectProvider.registerObject<IWeakMap<any, any>>(0, WeakMap);
-        this.realToProxy = sharedObjectProvider.registerObject<IWeakMap<any, any>>(1, WeakMap);
-
-        this.wrapMethod(Function.prototype, 'toString', this.invokeWithUnproxiedThis);
-        this.wrapMethod(Function.prototype, 'toSource', this.invokeWithUnproxiedThis);
-    }
+    private proxyToReal:IWeakMap<any, any> = new WeakMap();
+    private realToProxy:IWeakMap<any, any> = new WeakMap();
 
     private copyProperty(orig, wrapped, prop:PropertyKey) {
         let desc = Object.getOwnPropertyDescriptor(orig, prop);
@@ -56,5 +47,11 @@ export default class ProxyService implements IProxyService {
                 enumerable: desc.enumerable
             });
         }
+    }
+
+    $apply(window:Window):void {
+        const functionPType = window.Function.prototype;
+        this.wrapMethod(functionPType, 'toString', this.invokeWithUnproxiedThis);
+        this.wrapMethod(functionPType, 'toSource', this.invokeWithUnproxiedThis);
     }
 }

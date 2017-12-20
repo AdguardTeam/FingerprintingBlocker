@@ -1,41 +1,72 @@
 const exec = require('child_process').exec;
 const fs = require('fs');
-const gulp = require('gulp');
-const insert = require('gulp-insert');
+const replace = require('replace-in-file');
+const { promisify } = require('util');
 
-module.exports = (done) => {
-    exec(`emcc -O3 -s ONLY_MY_CODE=1 -s EXPORTED_FUNCTIONS="['_apply_noise']"  -g0 --separate-asm src/asm/noiseApplyerModule2D.c -o src/asm/noiseApplyerModule2D.js`, (err, stdout, stderr) => {
-        if (err) {
-            console.error(err);
-            done();
-            return;
-        }
-        console.log(stdout);
+const readFile = promisify(fs.readFile);
+const unlink = promisify(fs.unlink);
 
-        const reAsmModule = /^\s*Module\[["']asm["']\]\s*=\s*\(\s*(function\s*\([\s\S]*\})\s*\)\s*;\s*$/;
+const reAsmModule = /^\s*Module\[["']asm["']\]\s*=\s*\(\s*(function\s*\([\s\S]*\})\s*\)\s*;\s*$/;
+const ASM_ROOT_PATH = 'src/asm/';
 
-        fs.unlink('src/asm/noiseApplyerModule2D.js', function(err) {
-            if(err && err.code == 'ENOENT') {
+const data = [
+    {
+        fileName: "BitmapNoiseApplier",
+        export: ['_apply_noise'],
+        module_name: 'bitmapNoiseApplier'
+    },
+    {
+        fileName: "AudioNoiseApplier",
+        export: [
+            '_noise_to_time_domain',
+            '_noise_to_frequency',
+            '_noise_to_byte_frequency',
+            '_noise_to_byte_time_domain'
+        ],
+        module_name: 'audioNoiseApplier'
+    }
+]
 
-            } else if (err) {
-                // other errors, e.g. maybe we don't have enough permission
-                console.error("Error occurred while trying to remove file");
-            } else {
-                
-            }
+module.exports = async (done) => {
+    return await data.forEach(async (info) => {
+        try {
+            const C = ASM_ROOT_PATH + info.fileName + '.c';
+            const ASM = ASM_ROOT_PATH + info.fileName + '.asm.js';
+            const PLAIN_JS = ASM_ROOT_PATH + info.fileName + '.js';
 
-            gulp.src('src/asm/*.asm.js')    
-                .pipe(insert.transform((content) => {
-                    return content.replace(reAsmModule, (_, c1) => {
-                        return `var noiseApplyerModule2D = ${c1}`;
-                    })
-                }))
-                .pipe(gulp.dest('src/asm'))
-                .on('end', () => {
-                    done();
+            const buf = await readFile(C);
+
+            const file = buf.toString();
+
+            await new Promise((resolve, reject) => {
+                const command = `emcc ` +
+                    `-O3 ` +
+                    `-s ONLY_MY_CODE=1 ` +
+                    `-s EXPORTED_FUNCTIONS="[${info.export.map(name => `'${name}'`).join(',')}]" ` +
+                    `-g0 ` +
+                    `--separate-asm ${C} ` +
+                    `-o ${PLAIN_JS}`;
+
+                exec(command, (err, stdout, stderr) => {
+                    if (err) { reject(err); }
+                    console.log(stdout);
+                    console.error(stderr);
+                    resolve();
                 });
-        });
+            });
 
+            await Promise.all([
+                unlink(PLAIN_JS),
+                replace({
+                    files: ASM,
+                    from: reAsmModule,
+                    to: (_, c1) => {
+                        return `var ${info.module_name} = ${c1}`;
+                    }
+                })
+            ]);
+        } catch (err) {
+            console.error(err);
+        }
     });
 }
-

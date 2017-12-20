@@ -6,7 +6,12 @@ import IInterContextMessageHub, { TMessageHubCallback } from '../messaging/IInte
 
 import { IAlertMessage } from '../ui/alerts/message'
 
-import TBlockEvent from '../event/BlockEvent';
+import TBlockEvent, { Apis, Action, CanvasBlockEventType, AudioBlockEventType, CanvasBlockEvent, AudioBlockEvent, EventType } from '../event/BlockEvent';
+import { formatText, getMessage } from '../ui/localization';
+import { ApplyHandler } from '../proxy/IProxyService';
+import IApiExecResult from './IApiExecResult';
+import getStack from '../stack/stack'
+import { original } from '../wrapper/common_apply_handlers'
 
 const enum NotifierMessageType {
     ALERT_DATA,
@@ -26,7 +31,7 @@ export default class Notifier implements INotifier {
         this.installAlertDataTransferrer();
     }
 
-    onBlock(evt:TBlockEvent) {
+    private onBlock(evt:TBlockEvent) {
         // this.latestCanvas = evt.data;
         // delete non-transferrable object
         delete evt.data;
@@ -45,7 +50,7 @@ export default class Notifier implements INotifier {
             this.transferAlertData = (data) => {
                 (typeof requestIdleCallback === 'function' ? requestIdleCallback : setTimeout)(() => {
                     this.storage.appendEvent(data.blockEvent);
-                    let stat = this.storage.getStats();
+                    let stat = this.storage.getStat();
                     this.alertController.createOrUpdateAlert(data, stat);
                 });
             }
@@ -56,5 +61,15 @@ export default class Notifier implements INotifier {
             };
         }
         this.messageHub.on<IAlertMessage>(0, this.transferAlertData);
+    }
+
+    dispatchBlockEvent(api:Apis, type:EventType, action:Action, stack:string, data?):void {
+        let event:TBlockEvent;
+        if (api === Apis.canvas) {
+            event = new CanvasBlockEvent(<CanvasBlockEventType>type, action, stack, data);
+        } else {
+            event = new AudioBlockEvent(<AudioBlockEventType>type, action, stack, data);
+        }
+        this.onBlock(event);
     }
 }

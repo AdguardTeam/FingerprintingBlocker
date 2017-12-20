@@ -1,7 +1,6 @@
 import { h, Component } from '../../preact'
 import { ICommonState } from './Alert'
 import BlockEvent, { Action, getApiName } from '../../../event/BlockEvent'
-import parseStack from '../../../stack/StackParseService'
 import * as options from '../../options/radio_input_options'
 import { bind, trustedEventListener } from '../../utils/event_listener_decorators'
 import IStorage from '../../../storage/IStorage'
@@ -76,11 +75,10 @@ export default class Details extends Component<IDetailsProps, IDetailsState> {
     }
     render(props:IDetailsProps, state:IDetailsState) {
         const domain = props.storage.domain;
-        const parseResult = parseStack(props.latestEvent.stack);
-        const currentStats = props.storage.getStats();
+        const currentStats = props.storage.getStat();
         const statHasCanvas = currentStats.canvasBlockCount > 0;
         const statHasAudio = currentStats.audioBlockCount > 0;
-        
+
         return (
             <div class="popup__text">
                 <div class="popup__text--domain">

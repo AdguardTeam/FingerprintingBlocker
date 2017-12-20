@@ -1,4 +1,6 @@
-import TBlockEvent from '../event/BlockEvent';
+import TBlockEvent, { Apis, EventType, Action } from '../event/BlockEvent';
+import { ApplyHandler } from '../proxy/IProxyService';
+import IApiExecResult from './IApiExecResult';
 
 /****************************************************************************
  
@@ -10,5 +12,5 @@ import TBlockEvent from '../event/BlockEvent';
                                                      +-----------------+
  */
 export default interface INotifier {
-    onBlock(evt:TBlockEvent):void
+    dispatchBlockEvent(api:Apis, type:EventType, action:Action, stack:string, data?):void
 }

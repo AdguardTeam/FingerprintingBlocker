@@ -11,7 +11,6 @@ FingerprintingBlocker is a userscript that prevents fingerprinting attempts.
  * Cross-browser support
  * Fully configurable behavior
    - per-site settings
- * Invisible to other scripts
 
 ## Installation
  - If you are using a standalone AdGuard app that supports userscripts, you can install it in it.
@@ -19,6 +18,15 @@ To use with browser extensions,
  - For Firefox, it is designed to operate with Tampermonkey. We have made it work with Greasemonkey for our another project [PopupBlocker](https://github.com/AdguardTeam/PopupBlocker), but we have dropped its support due to design complexity that would incur for supporting it.
  - Otherwise, it will work with any userscript extension.
  - If you are using Chrome and using FingerprintingBlocker in _Faking mode_, it is recommended to enable a flag [Experimental Validate Asm.js and convert to WebAssembly when valid.](chrome://flags/#enable-asm-webassembly).
+
+## Fingerprinting Proof-of-concept sites
+
+Test your installation with
+
+ - [BrowserLeaks.com](https://browserleaks.com/)
+ - [Panopticlick](https://panopticlick.eff.org/)
+ - [UniqueMachine](http://uniquemachine.org/)
+ - [AmIUnique](https://amiunique.org/)
 
 ## Development build
 

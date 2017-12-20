@@ -10,10 +10,9 @@ import DomainSettingsStorage from './DomainSettingsStorage';
 export default class GlobalSettingsStorage extends AbstractSettingsStorage implements IGlobalSettingsStorage {
     public globalKey:string
 
-    // Default global settings 
+    // Default global settings
     private static readonly DEFAULT_ACTION          = Action.ALLOW
     private static readonly DEFAULT_NOTIFY          = true
-    private static readonly DEFAULT_CONFIRM         = false
     private static readonly DEFAULT_WHITELISTED     = false
     private static readonly DEFAULT_FAKING_MODE     = FakingModes.PER_DOMAIN
     // Time interval for hash update, in milliseconds.
@@ -26,24 +25,22 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
             const globalSettings = <IGlobalSettings>JSON.parse(globalSettingsStringified);
             this.$action = globalSettings.defaultAction;
             this.$notify = globalSettings.defaultNotify;
-            this.$confirm = globalSettings.defaultConfirm;
             this.$whitelisted = globalSettings.defaultWhitelisted;
             this.$fakingMode = globalSettings.defaultFakingMode;
             this.$updateInterval = globalSettings.defaultUpdateInterval;
             this.globalKey = globalSettings.iframeKey;
-            this.hash = new Int32Array(16);
-            base64.decode(globalSettings.hash, new Uint8Array(this.hash));
-            this.lastUpdated = globalSettings.lastUpdated;
+            this.$salt = new Int32Array(16);
+            base64.decode(globalSettings.defaultSalt, new Uint8Array(this.$salt.buffer));
+            this.$lastUpdated = globalSettings.lastUpdated;
         } else {
             this.$action = GlobalSettingsStorage.DEFAULT_ACTION;
             this.$notify = GlobalSettingsStorage.DEFAULT_NOTIFY;
-            this.$confirm = GlobalSettingsStorage.DEFAULT_CONFIRM;
             this.$whitelisted = GlobalSettingsStorage.DEFAULT_WHITELISTED;
             this.$fakingMode = GlobalSettingsStorage.DEFAULT_FAKING_MODE;
             this.$updateInterval = GlobalSettingsStorage.DEFAULT_UPDATE_INTERVAL;
-            this.globalKey = base64.encode(new Uint8Array(this.getRandomHash()));
-            this.hash = this.getRandomHash();
-            this.lastUpdated = this.now();
+            this.globalKey = base64.encode(new Uint8Array(this.getRandomSalt().buffer));
+            this.$salt = this.getRandomSalt();
+            this.$lastUpdated = this.now();
             this.save();
         }
     }
@@ -52,11 +49,10 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
         const globalSettings:IGlobalSettings = {
             defaultAction: this.$action,
             defaultNotify: this.$notify,
-            defaultConfirm: this.$confirm,
             defaultWhitelisted: this.$whitelisted,
             defaultFakingMode: this.$fakingMode,
             defaultUpdateInterval: this.$updateInterval,
-            hash: base64.encode(new Uint8Array(this.hash)),
+            defaultSalt: base64.encode(new Uint8Array(this.$salt.buffer)),
             lastUpdated: this.now(),
             iframeKey: this.globalKey
         }
@@ -72,9 +68,6 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
     getNotify():boolean {
         return this.$notify;
     }
-    getConfirm():boolean {
-        return this.$confirm;
-    }
     getWhitelisted():boolean {
         return this.$whitelisted;
     }
@@ -85,7 +78,7 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
         return this.$updateInterval;
     }
 
-    protected loadStats():void {
+    protected loadStat():void {
         const domains = this.enumerateDomains();
         this.triggerLog = [];
         this.stats = domains.map((domain) => {
@@ -99,7 +92,7 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
         });
     }
 
-    protected saveStats():void { } // Does nothing
+    protected saveStat():void { } // Does nothing
     private domainStorageMap:stringmap<IDomainSettingsStorage>
     getDomainStorage(domain:string):IDomainSettingsStorage {
         if (TypeGuards.isUndef(this.domainStorageMap)) {

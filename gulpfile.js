@@ -19,11 +19,11 @@ global.options = {
     "Dev": "https://AdguardTeam.github.io/FingerprintingBlocker/",
     get "Beta"() {
         return "https://cdn.adguard.com/public/Userscripts/Beta/AdguardFingerpringingBlocker/"
-            + options["VERSION"];
+            + options["VERSION"] + "/";
     },
     get "Release"() {
         return "https://cdn.adguard.com/public/Userscripts/AdguardFingerpringingBlocker/"
-            + options["VERSION"];
+            + options["VERSION"] + "/";
     }
 },
 
@@ -104,7 +104,6 @@ gulp.task('clean',                  require('./tasks/clean'));
 gulp.task('meta',                   require('./tasks/meta'));
 gulp.task('rollup',                 require('./tasks/rollup'));
 
-gulp.task('validate-asm',           require('./tasks/asm/validate'));
 gulp.task('generate-asm',           require('./tasks/asm/generate'));
 gulp.task('append-asm',             require('./tasks/asm/append'));
 

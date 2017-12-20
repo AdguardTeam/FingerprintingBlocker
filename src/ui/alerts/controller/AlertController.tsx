@@ -93,10 +93,10 @@ export default class AlertController implements IAlertController {
                 }
                 doc.addEventListener('mousedown', onInteraction, true);
                 doc.addEventListener('mouseover', (evt) => {
-                    evt.isTrusted && this.onMouseOver();
+                    evt.isTrusted && this.$onMouseOver();
                 }, true);
                 doc.addEventListener('mouseout', (evt) => {
-                    evt.isTrusted && this.onMouseOut();
+                    evt.isTrusted && this.$onMouseOut();
                 }, true)
                 this.scheduleDestroy();
                 // Without this, the background of the iframe will be white in IE11
@@ -132,10 +132,10 @@ export default class AlertController implements IAlertController {
         let iframe = this.iframe;
         applyStyle(iframe, AlertController.HIDDEN_IFRAME_STYLE);
         setTimeout(() => {
+            this.iframe = undefined;
+            this.alertInstance = undefined;
             document.documentElement.removeChild(iframe);
         }, 400);
-        this.iframe = undefined;
-        this.alertInstance = undefined;
     }
     private static readonly TIMEOUT = 8000;
     private static readonly MIN_TIMEOUT = 1000;
@@ -153,12 +153,12 @@ export default class AlertController implements IAlertController {
         this.timer = undefined;
     }
 
-    private onMouseOver() {
+    private $onMouseOver() {
         if (!this.timerPrevented) {
             this.cancelDestroy();
         }
     }
-    private onMouseOut() {
+    private $onMouseOut() {
         if (!this.timerPrevented) {
             let pastDue = this.lastUpdate + AlertController.TIMEOUT - Date.now();
             let minTimeout = AlertController.MIN_TIMEOUT;
