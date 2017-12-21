@@ -1,6 +1,6 @@
 import IStorage, { IDomainSettingsStorage } from './IStorage'
 import IStats from './IStats'
-import TBlockEvent, { Apis, Action } from '../event/BlockEvent'
+import TBlockEvent, { Apis, Action } from '../notifier/BlockEvent'
 import FakingModes from './FakingModesEnum'
 import * as base64 from '../shared/base64'
 import TypeGuards from '../shared/TypeGuards'
@@ -21,12 +21,8 @@ export default class DomainSettingsStorage extends AbstractSettingsStorage imple
         this.$whitelisted = domainSettings.whitelisted;
         this.$fakingMode = domainSettings.fakingMode;
         this.$updateInterval = domainSettings.updateInterval;
-
-        if (!TypeGuards.isUndef(domainSettings.salt)) {
-            this.$salt = new Int32Array(32);
-            base64.decode(domainSettings.salt, new Uint8Array(this.$salt.buffer));
-            this.$lastUpdated = domainSettings.lastUpdated;
-        }
+        this.$salt = domainSettings.salt;
+        this.$lastUpdated = domainSettings.lastUpdated;
     }
 
     protected save() {
@@ -48,14 +44,14 @@ export default class DomainSettingsStorage extends AbstractSettingsStorage imple
             hasSpecificSettings = true;
             domainSettings.fakingMode = this.$fakingMode;
         }
-        if (!TypeGuards.isUndef(this.$salt)) {
-            hasSpecificSettings = true;
-            domainSettings.salt = base64.encode(new Uint8Array(this.$salt.buffer));
-            domainSettings.lastUpdated = this.$lastUpdated;
-        }
         if (!TypeGuards.isUndef(this.$updateInterval)) {
             hasSpecificSettings = true;
             domainSettings.updateInterval = this.$updateInterval;
+        }
+        if (!TypeGuards.isUndef(this.$salt)) {
+            hasSpecificSettings = true;
+            domainSettings.salt = this.$salt;
+            domainSettings.lastUpdated = this.$lastUpdated;
         }
         if (hasSpecificSettings) {
             GM_setValue(this.domain, JSON.stringify(domainSettings));
@@ -92,12 +88,33 @@ export default class DomainSettingsStorage extends AbstractSettingsStorage imple
     getUpdateIntervalIsModified() {
         return !TypeGuards.isUndef(this.$updateInterval);
     }
+    getSalt():Int32Array {
+        const fakingMode = this.getFakingMode();
+        if (fakingMode === FakingModes.EVERY_TIME) {
+            return this.getRandomSalt();
+        }
+        if (fakingMode === FakingModes.CONSTANT) {
+            return this.globalSettings.getSalt(); // Get default salt
+        }
+        if (fakingMode === FakingModes.PER_SESSION) {
+            if (TypeGuards.isUndef(this.sessionSalt)) {
+                this.sessionSalt = this.getRandomSalt();
+            }
+            return this.sessionSalt;
+        }
+        // In case of PER_DOMAIN, extract salt from `this.$salt`.
+        return super.getSalt();
+    }
+    getSaltIsModified():boolean {
+        return !TypeGuards.isUndef(this.$salt);
+    }
     getAnythingIsModified() {
         return this.getActionIsModified() ||
             this.getNotifyIsModified() ||
             this.getWhitelistedIsModified() ||
             this.getFakingModeIsModified() ||
-            this.getUpdateIntervalIsModified();
+            this.getUpdateIntervalIsModified() ||
+            this.getSaltIsModified();
     }
 
     protected loadStat():void {

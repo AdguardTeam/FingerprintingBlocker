@@ -1,7 +1,7 @@
 import IAnonymizer from "./IAnonymizer";
 import { ApplyHandler } from "../proxy/IProxyService";
-import IApiExecResult from "../notifier/IApiExecResult";
-import { Apis, EventType, Action } from "../event/BlockEvent";
+import IApiExecResult from "./IApiExecResult";
+import { Apis, EventType, Action } from "../notifier/BlockEvent";
 import INotifier from "../notifier/INotifier";
 import getStack from "../stack/stack";
 import IStorage from "../storage/IStorage";

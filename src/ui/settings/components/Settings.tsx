@@ -2,7 +2,7 @@ import { h, Component } from '../../preact'
 import Select from '../../elements/Select'
 import RadioInputGroup from '../../elements/RadioInputGroup'
 import IStorage from '../../../storage/IStorage'
-import BlockEvent, { Action } from '../../../event/BlockEvent';
+import BlockEvent, { Action } from '../../../notifier/BlockEvent';
 import FakingModes from '../../../storage/FakingModesEnum'
 import * as radioInputOptions from '../../options/radio_input_options';
 

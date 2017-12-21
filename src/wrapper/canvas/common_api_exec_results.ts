@@ -1,4 +1,4 @@
-import IApiExecResult from "../../notifier/IApiExecResult";
+import IApiExecResult from "../IApiExecResult";
 import * as log from '../../shared/log';
 
 export class PixelFakeResult<T> implements IApiExecResult<T> {

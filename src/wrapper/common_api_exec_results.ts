@@ -1,4 +1,4 @@
-import IApiExecResult from "../notifier/IApiExecResult";
+import IApiExecResult from "./IApiExecResult";
 
 export class Notify<T> implements IApiExecResult<T> {
     constructor(

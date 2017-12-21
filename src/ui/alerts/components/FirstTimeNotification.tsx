@@ -1,5 +1,5 @@
 import { h, Component } from '../../preact'
-import BlockEvent, { Action } from '../../../event/BlockEvent';
+import BlockEvent, { Action } from '../../../notifier/BlockEvent';
 import IStats from '../../../storage/IStats';
 import { ICommonState } from './Alert';
 import { bind, trustedEventListener } from '../../utils/event_listener_decorators';

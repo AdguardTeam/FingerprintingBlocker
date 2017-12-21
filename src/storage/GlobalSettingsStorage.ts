@@ -1,6 +1,6 @@
 import IStorage, { IGlobalSettingsStorage, IDomainSettingsStorage } from './IStorage'
 import IStats from './IStats';
-import TBlockEvent, { Apis, Action } from '../event/BlockEvent';
+import TBlockEvent, { Apis, Action } from '../notifier/BlockEvent';
 import FakingModes from './FakingModesEnum';
 import * as base64 from '../shared/base64';
 import TypeGuards from '../shared/TypeGuards';
@@ -29,8 +29,7 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
             this.$fakingMode = globalSettings.defaultFakingMode;
             this.$updateInterval = globalSettings.defaultUpdateInterval;
             this.globalKey = globalSettings.iframeKey;
-            this.$salt = new Int32Array(16);
-            base64.decode(globalSettings.defaultSalt, new Uint8Array(this.$salt.buffer));
+            this.$salt = globalSettings.defaultSalt;
             this.$lastUpdated = globalSettings.lastUpdated;
         } else {
             this.$action = GlobalSettingsStorage.DEFAULT_ACTION;
@@ -38,9 +37,9 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
             this.$whitelisted = GlobalSettingsStorage.DEFAULT_WHITELISTED;
             this.$fakingMode = GlobalSettingsStorage.DEFAULT_FAKING_MODE;
             this.$updateInterval = GlobalSettingsStorage.DEFAULT_UPDATE_INTERVAL;
-            this.globalKey = base64.encode(new Uint8Array(this.getRandomSalt().buffer));
-            this.$salt = this.getRandomSalt();
+            this.$salt = base64.encode(new Uint8Array(this.getRandomSalt().buffer));
             this.$lastUpdated = this.now();
+            this.globalKey = base64.encode(new Uint8Array(this.getRandomSalt().buffer));
             this.save();
         }
     }
@@ -52,14 +51,11 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
             defaultWhitelisted: this.$whitelisted,
             defaultFakingMode: this.$fakingMode,
             defaultUpdateInterval: this.$updateInterval,
-            defaultSalt: base64.encode(new Uint8Array(this.$salt.buffer)),
+            defaultSalt: this.$salt,
             lastUpdated: this.now(),
             iframeKey: this.globalKey
         }
         GM_setValue(this.GLOBAL_SETTINGS_KEY, JSON.stringify(globalSettings));
-        for (let domain in this.domainStorageMap) {
-            this.domainStorageMap[domain].init();
-        }
     }
 
     getAction():Action {
@@ -77,7 +73,7 @@ export default class GlobalSettingsStorage extends AbstractSettingsStorage imple
     getUpdateInterval():number {
         return this.$updateInterval;
     }
-
+    
     protected loadStat():void {
         const domains = this.enumerateDomains();
         this.triggerLog = [];

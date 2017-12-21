@@ -13,7 +13,7 @@ export default class ReadPixelAnonymizer extends CanvasApiAnonymizer<WebGLRender
     private hasEnoughPixelCount(_arguments:IArguments|any[]):boolean {
         const sw:number = _arguments[2];
         const sh:number = _arguments[3];
-        return CanvasApiAnonymizer.MIN_CANVAS_SIZE_TO_BLOCK > sw * sh << 2;
+        return CanvasApiAnonymizer.MIN_CANVAS_SIZE_TO_BLOCK < sw * sh << 2;
     }
     onAllow(orig, __this, _arguments) {
         return new Notify(original<any,void>(orig, __this, _arguments), this.hasEnoughPixelCount(_arguments));

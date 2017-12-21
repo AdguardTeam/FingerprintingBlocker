@@ -1,6 +1,6 @@
 import { ApplyHandler } from "../proxy/IProxyService";
-import IApiExecResult from "../notifier/IApiExecResult";
-import { Apis, EventType } from "../event/BlockEvent";
+import IApiExecResult from "./IApiExecResult";
+import { Apis, EventType } from "../notifier/BlockEvent";
 
 export default interface IAnonymizer<T,R> {
     readonly onAllow?:ApplyHandler<T,IApiExecResult<R>>

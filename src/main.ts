@@ -7,7 +7,7 @@ import InterContextMessageHub from './messaging/InterContextMessageHub';
 import CanvasProcessor from './wrapper/canvas/processor/CanvasProcessor';
 import CanvasModeTracker from './wrapper/canvas/mode_tracker/CanvasModeTracker';
 import AudioProcessor from './wrapper/audio/processor/AudioProcessor';
-import AudioBufferCache from './wrapper/audio/audio_buffer_tracker/AudioBufferCache';
+import AudioBufferCache from './wrapper/audio/buffer_cache/AudioBufferCache';
 import ApiWrapper from './wrapper/ApiWrapper';
 import AlertController from './ui/alerts/controller/AlertController';
 
@@ -20,7 +20,7 @@ const globalKey = globalSettings.globalKey;
 
 // globalKey is used to indicate that the userscript has been run
 // from the parent context which has the same origin.
-// See SharedObjectProvider implementation.
+// See ChildContextInjector implementation.
 if (!window.hasOwnProperty(globalKey)) {
     const proxyService      = new ProxyService();
     const injector          = new ChildContextInjector(window, proxyService, globalKey);

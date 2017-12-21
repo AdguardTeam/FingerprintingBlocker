@@ -28,6 +28,10 @@ Test your installation with
  - [UniqueMachine](http://uniquemachine.org/)
  - [AmIUnique](https://amiunique.org/)
 
+## Settings page
+
+A temporary settings page is available at: https://AdguardTeam.github.io/FingerprintingBlocker/settings.html
+
 ## Development build
 
 Built automatically on every new commit: https://AdguardTeam.github.io/FingerprintingBlocker/fingerprintingblocker.user.js

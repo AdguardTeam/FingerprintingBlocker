@@ -1,4 +1,4 @@
-import CanvasProcessor, { crop, createImageData } from '../../../../src/wrapper/canvas/processor/CanvasProcessor';
+import CanvasProcessor, { crop } from '../../../../src/wrapper/canvas/processor/CanvasProcessor';
 import dummyStorageObject from '../../../storage/Storage';
 
 const expect = chai.expect;
@@ -8,7 +8,7 @@ const crypto:Crypto = window.crypto || window['msCrypto'];
 function getRandomImageData(x?:number, y?:number):ImageData {
     x = x || Math.floor(Math.random() * 27) + 101;
     y = y || Math.floor(Math.random() * 27) + 101;
-    let imageData = createImageData(x, y);
+    let imageData = (new CanvasProcessor(dummyStorageObject, window)).createImageData(x, y);
     fillRandomValues(imageData.data.buffer);
     return imageData;
 }
@@ -33,7 +33,7 @@ describe('CanvasProcessor', function() {
         let x = Math.floor(Math.random() * 68) + 2;
         let y = Math.floor(Math.random() * 68) + 2;
 
-        let croppedImageData = createImageData(w - x, h - y);
+        let croppedImageData = canvasProcessor.createImageData(w - x, h - y);
         crop(imageData.data, x, y, w - x, h - y, w, h, croppedImageData.data);
 
         let { $data: data1, $result: result1 } = canvasProcessor.addNoiseToBitmap((buf) => { buf.set(imageData.data) }, 0, 0, w, h, w, h);

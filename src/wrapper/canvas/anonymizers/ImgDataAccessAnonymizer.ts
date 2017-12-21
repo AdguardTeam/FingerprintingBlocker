@@ -1,6 +1,6 @@
-import IApiExecResult from "../../../notifier/IApiExecResult";
+import IApiExecResult from "../../IApiExecResult";
 import { original } from "../../common_apply_handlers";
-import { crop, createImageData } from "../processor/CanvasProcessor";
+import { crop } from "../processor/CanvasProcessor";
 import ICanvasProcessor from "../processor/ICanvasProcessor";
 import { PixelFakeResult } from "../common_api_exec_results";
 import CanvasApiAnonymizer from "./BaseCanvasApiAnonymizer";
@@ -12,7 +12,7 @@ export default class ImgDataAccessAnonymizer extends CanvasApiAnonymizer<CanvasR
     private hasEnoughPixelCount(_arguments:IArguments|any[]):boolean {
         const sw:number = _arguments[2];
         const sh:number = _arguments[3];
-        return CanvasApiAnonymizer.MIN_CANVAS_SIZE_TO_BLOCK > sw * sh << 2;
+        return CanvasApiAnonymizer.MIN_CANVAS_SIZE_TO_BLOCK < sw * sh << 2;
     }
 
     onAllow(orig, __this, _arguments) {
@@ -30,19 +30,18 @@ export default class ImgDataAccessAnonymizer extends CanvasApiAnonymizer<CanvasR
         const tempImageData:ImageData = orig.apply(__this, [sx - 1, sy - 1, sw + 2, sh + 2]);
         const {$data, $result} = this.canvasProcessor.addNoiseToBitmap((buffView) => { buffView.set(tempImageData.data); }, sx - 1, sy - 1, sw + 2, sh + 2, origWidth, origHeight);
 
-        const imageData = createImageData(sw, sh);
+        const imageData = this.canvasProcessor.createImageData(sw, sh);
 
         // Convert dimension of the obtained imageData.
         crop($data, 1, 1, sw, sh, sw + 2, sh + 2, imageData.data);
 
         return new PixelFakeResult(imageData, $result);
     }
-    
     onBlock(orig, __this, _arguments) {
         const sw:number = _arguments[2];
         const sh:number = _arguments[3];
         const notify = this.hasEnoughPixelCount(_arguments);
-        const returned = notify ? createImageData(sw, sh) : original<CanvasRenderingContext2D,ImageData>(orig, __this, _arguments)
+        const returned = notify ? this.canvasProcessor.createImageData(sw, sh) : original<CanvasRenderingContext2D,ImageData>(orig, __this, _arguments)
         return new Notify(returned, notify);
     }
     getData(orig, __this:CanvasRenderingContext2D, _arguments) {
@@ -53,7 +52,5 @@ export default class ImgDataAccessAnonymizer extends CanvasApiAnonymizer<CanvasR
         storage:IStorage,
         notifier:INotifier,
         private canvasProcessor:ICanvasProcessor
-    ) {
-        super(storage, notifier);
-    }
+    ) { super(storage, notifier); }
 }

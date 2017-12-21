@@ -1,6 +1,6 @@
 import { h, Component } from '../../preact'
 import IStorage from "../../../storage/IStorage";
-import { getApiName } from "../../../event/BlockEvent";
+import { getApiName } from "../../../notifier/BlockEvent";
 import { trustedEventListener } from "../../utils/event_listener_decorators";
 import Pages from './PagesEnum'
 

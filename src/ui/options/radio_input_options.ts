@@ -1,4 +1,4 @@
-import { Action } from '../../event/BlockEvent'
+import { Action } from '../../notifier/BlockEvent'
 import FakingMode from '../../storage/FakingModesEnum'
 
 export const ACTION_OPTIONS = [

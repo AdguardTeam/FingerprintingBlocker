@@ -3,10 +3,10 @@ const inline = require('gulp-inline')
 const rename = require('gulp-rename')
 
 module.exports = () => {
-    return gulp.src('src/ui/settings/index.html')
+    return gulp.src('test/index.html')
         .pipe(inline({
-            base: 'src/ui/settings/'
+            base: 'test/'
         }))
-        .pipe(rename('settings.html'))
-        .pipe(gulp.dest('build/'));
+        .pipe(rename('index.html'))
+        .pipe(gulp.dest('build/test/'));
 };

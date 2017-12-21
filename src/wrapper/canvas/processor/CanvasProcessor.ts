@@ -13,18 +13,6 @@ export function crop(data:Uint8Array|Uint8ClampedArray, x:number, y:number, w:nu
     }
 }
 
-export function createImageData(w:number, h:number):ImageData {
-    try {
-        return new ImageData(w, h);
-    } catch(e) {
-        // IE does not support ImageData constructor
-        let canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        return canvas.getContext('2d').getImageData(0, 0, w, h);
-    }
-}
-
 export default class CanvasProcessor implements ICanvasProcessor {
     private static DATA_OFFSET = 0;
 
@@ -36,14 +24,22 @@ export default class CanvasProcessor implements ICanvasProcessor {
         // Stores native methods here, which will be overridden later.
         this.getContext = HTMLCanvasElement.prototype.getContext;
         this.getImageData = CanvasRenderingContext2D.prototype.getImageData;
-        if (typeof OffscreenCanvas === 'function') {
-            this.getContextOffscreen = OffscreenCanvas.prototype.getContext;
-        }
     }
 
     private getContext:typeof HTMLCanvasElement.prototype.getContext
     private getImageData:typeof CanvasRenderingContext2D.prototype.getImageData
-    private getContextOffscreen:typeof OffscreenCanvas.prototype.getContext
+
+    createImageData(w:number, h:number):ImageData {
+        try {
+            return new ImageData(w, h);
+        } catch(e) {
+            // IE does not support ImageData constructor.
+            let canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            return this.getImageData.call(this.getContext.call(canvas, '2d'), 0, 0, w, h);
+        }
+    }
 
     private initialize2DNoiser(size:number) {
         if (!this.noiseApplyer2D || size > this.bufferManager.buffer.byteLength) {

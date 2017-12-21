@@ -1,6 +1,6 @@
 import { h, Component } from '../../preact'
 import IStorage, { IDomainSettingsStorage } from '../../../storage/IStorage'
-import TBlockEvent, { Action } from '../../../event/BlockEvent'
+import TBlockEvent, { Action } from '../../../notifier/BlockEvent'
 import IStats from '../../../storage/IStats'
 import FirstTimeNotification from './FirstTimeNotification'
 import Collapsed from './Collapsed'

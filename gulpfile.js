@@ -114,11 +114,11 @@ gulp.task('tscc-clean',             require('./tasks/tscc/clean'));
 gulp.task('uglify',                 require('./tasks/uglify'));
 
 gulp.task('build-test',             require('./tasks/pages/test'));
-gulp.task('build-settings-js',      require('./tasks/pages/settings'));
+gulp.task('build-test-html',        require('./tasks/pages/test-html'))
+gulp.task('build-settings',         require('./tasks/pages/settings'));
 gulp.task('build-settings-html',    require('./tasks/pages/settings-html'));
 
 gulp.task('watch',                  require('./tasks/watch'));
-
 
 /**********************************************************************************************/
 /********************************** Main Tasks ************************************************/
@@ -159,24 +159,23 @@ gulp.task('release-no-minification',
     }
 );
 
-gulp.task('build-ghpage',
+gulp.task('build-test-ghpage',
     (done) => {
-        runSequence('clean', ['dev', 'build-test', 'build-settings-js'], done);
+        runSequence('build-test', 'build-test-html', done);
     }
 );
 
-gulp.task('tests-to-ghpage', () => {
-    return [
-        require('fs').writeFile('build/.nojekyll', ''),
-        gulp.src(['test/index.html', 'test/**/*.js']).pipe(gulp.dest(options['OUTPUT_PATH'] + '/test/')),
-        gulp.src('node_modules/mocha/mocha.*').pipe(gulp.dest(options['OUTPUT_PATH'] + '/node_modules/mocha/')),
-        gulp.src('node_modules/chai/chai.js').pipe(gulp.dest(options['OUTPUT_PATH'] + '/node_modules/chai/'))
-    ];
-})
+gulp.task('build-settings-ghpage',
+    (done) => {
+        runSequence('build-settings', 'build-settings-html', done);
+    }
+);
 
 gulp.task('travis',
     (done) => {
-        runSequence('build-ghpage', 'build-settings-html', 'tests-to-ghpage', done);
+        runSequence('clean', 'dev', ['build-test-ghpage', 'build-settings-ghpage'], () => {
+            require('fs').writeFile('build/.nojekyll', '', done);
+        });
     }
 );
 

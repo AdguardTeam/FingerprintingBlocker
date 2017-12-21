@@ -1,6 +1,6 @@
 import IApiWrapper from "./IApiWrapper";
 import IAnonymizer from "./IAnonymizer";
-import { Apis, EventType, CanvasBlockEventType, CanvasBlockEvent, AudioBlockEventType } from "../event/BlockEvent";
+import { Apis, EventType, CanvasBlockEventType, CanvasBlockEvent, AudioBlockEventType } from "../notifier/BlockEvent";
 import IProxyService from "../proxy/IProxyService";
 import INotifier from "../notifier/INotifier";
 import IStorage from "../storage/IStorage";
@@ -9,7 +9,7 @@ import ICanvasProcessor from "./canvas/processor/ICanvasProcessor";
 import ICanvasModeTracker from "./canvas/mode_tracker/ICanvasModeTracker";
 import ImgDataAccessAnonymizer from "./canvas/anonymizers/ImgDataAccessAnonymizer";
 import ReadPixelAnonymizer from "./canvas/anonymizers/ReadPixelAnonymizer";
-import IAudioBufferCache from "./audio/audio_buffer_tracker/IAudioBufferCache";
+import IAudioBufferCache from "./audio/buffer_cache/IAudioBufferCache";
 import ChannelDataAnonymizer from "./audio/anonymizers/ChannelDataAnonymizer";
 import IAudioProcessor from "./audio/processor/IAudioProcessor";
 import ByteFrequencyAnonymizer from "./audio/anonymizers/ByteFrequencyAnonimizer";
@@ -26,9 +26,7 @@ export default class ApiWrapper implements IApiWrapper {
         private canvasModeTracker:ICanvasModeTracker,
         private audioProcessor:IAudioProcessor,
         private audioBufferCache:IAudioBufferCache
-    ) {
-
-    }
+    ) { }
 
     anonymize<T,R>(anonymizer:IAnonymizer<T,R>, owner:T, prop:PropertyKey, api:Apis, type:EventType, domain:string):void {
         this.proxyService.wrapMethod(owner, prop, anonymizer.getCombinedHandler(api, type, domain));
@@ -39,17 +37,14 @@ export default class ApiWrapper implements IApiWrapper {
 
         const canvasElementMethodsAnonymizer = new CanvasElementMethodsAnonymizer(this.storage, this.notifier, this.canvasProcessor, this.canvasModeTracker);
         const canvasPType = window.HTMLCanvasElement.prototype;
-
         this.anonymize(canvasElementMethodsAnonymizer, canvasPType, 'toDataURL', Apis.canvas, CanvasBlockEventType.TO_DATA_URL, domain);
         this.anonymize(canvasElementMethodsAnonymizer, canvasPType, 'toBlob', Apis.canvas, CanvasBlockEventType.TO_BLOB, domain);
         this.anonymize(canvasElementMethodsAnonymizer, canvasPType, 'mozGetAsFile', Apis.canvas, CanvasBlockEventType.MOZ_GET_AS_FILE, domain);
 
         const imgDataAccessAnonymizer = new ImgDataAccessAnonymizer(this.storage, this.notifier, this.canvasProcessor);
-
         this.anonymize(imgDataAccessAnonymizer, window.CanvasRenderingContext2D.prototype, 'getImageData', Apis.canvas, CanvasBlockEventType.GET_IMAGE_DATA, domain);
 
         const readPixelAnonymizer = new ReadPixelAnonymizer(this.storage, this.notifier, this.canvasProcessor);
-
         const webgl = window.WebGLRenderingContext;
         const webgl2 = window.WebGL2RenderingContext;
         if (webgl) {
@@ -61,11 +56,8 @@ export default class ApiWrapper implements IApiWrapper {
     }
 
     wrapAudioApis(window:Window) {
+        if (!window.AudioContext) { return; }
         const domain = window.location.hostname;
-
-        if (!window.AudioContext) {
-            return;
-        }
 
         const channelDataAnonymizer = new ChannelDataAnonymizer(this.storage, this.notifier, this.audioProcessor, this.audioBufferCache);
 

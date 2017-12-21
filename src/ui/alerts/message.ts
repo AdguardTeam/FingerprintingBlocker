@@ -1,4 +1,4 @@
-import TBlockEvent from '../../event/BlockEvent'
+import TBlockEvent from '../../notifier/BlockEvent'
 
 // postMessage'able object used in Notifier.
 export interface IAlertMessage {

@@ -5,7 +5,6 @@ import TypeGuards from "../../../shared/TypeGuards";
 import { NonBuggyWeakMap as WeakMap } from '../../../shared/WeakMap';
 
 export default class AudioBufferCache implements IAudioBufferCache {
-    private 
     constructor(
         private proxyService:IProxyService
     ) {
@@ -42,6 +41,7 @@ export default class AudioBufferCache implements IAudioBufferCache {
     }
     $apply(window:Window):void {
         this.proxyService.wrapAccessor(window.AudioProcessingEvent.prototype, 'inputBuffer', this.trackOutputAudioBuffer);
+        if (TypeGuards.isUndef(window.OfflineAudioContext)) { return; }
         this.proxyService.wrapAccessor(window.OfflineAudioCompletionEvent.prototype, 'renderedBuffer', this.trackOutputAudioBuffer);
     }
 }

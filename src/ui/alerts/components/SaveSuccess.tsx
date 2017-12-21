@@ -1,7 +1,7 @@
 import { h, Component } from '../../preact'
 import Pages from './PagesEnum'
 import { trustedEventListener } from '../../utils/event_listener_decorators'
-import { Action } from '../../../event/BlockEvent'
+import { Action } from '../../../notifier/BlockEvent'
 import { getMessage } from '../../localization'
 
 interface ISaveSuccessProps {

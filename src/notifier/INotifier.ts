@@ -1,6 +1,6 @@
-import TBlockEvent, { Apis, EventType, Action } from '../event/BlockEvent';
+import TBlockEvent, { Apis, EventType, Action } from '../notifier/BlockEvent';
 import { ApplyHandler } from '../proxy/IProxyService';
-import IApiExecResult from './IApiExecResult';
+import IApiExecResult from '../wrapper/IApiExecResult';
 
 /****************************************************************************
  

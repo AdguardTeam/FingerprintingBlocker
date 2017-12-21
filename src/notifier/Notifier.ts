@@ -6,10 +6,10 @@ import IInterContextMessageHub, { TMessageHubCallback } from '../messaging/IInte
 
 import { IAlertMessage } from '../ui/alerts/message'
 
-import TBlockEvent, { Apis, Action, CanvasBlockEventType, AudioBlockEventType, CanvasBlockEvent, AudioBlockEvent, EventType } from '../event/BlockEvent';
+import TBlockEvent, { Apis, Action, CanvasBlockEventType, AudioBlockEventType, CanvasBlockEvent, AudioBlockEvent, EventType } from '../notifier/BlockEvent';
 import { formatText, getMessage } from '../ui/localization';
 import { ApplyHandler } from '../proxy/IProxyService';
-import IApiExecResult from './IApiExecResult';
+import IApiExecResult from '../wrapper/IApiExecResult';
 import getStack from '../stack/stack'
 import { original } from '../wrapper/common_apply_handlers'
 

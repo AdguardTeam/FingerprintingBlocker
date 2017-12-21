@@ -1,7 +1,7 @@
 import AbstractAnonymizer from "../../AbstractAnonymizer";
-import IApiExecResult from "../../../notifier/IApiExecResult";
+import IApiExecResult from "../../IApiExecResult";
 import { ApplyHandler } from "../../../proxy/IProxyService";
-import { Apis, EventType } from "../../../event/BlockEvent";
+import { Apis, EventType } from "../../../notifier/BlockEvent";
 import { original } from "../../common_apply_handlers";
 import * as log from '../../../shared/log';
 

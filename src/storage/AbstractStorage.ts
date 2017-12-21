@@ -1,6 +1,6 @@
 import IStorage from './IStorage'
 import IStats from './IStats';
-import TBlockEvent, { Apis, Action } from '../event/BlockEvent';
+import TBlockEvent, { Apis, Action } from '../notifier/BlockEvent';
 import FakingModes from './FakingModesEnum';
 import * as base64 from '../shared/base64';
 import TypeGuards from '../shared/TypeGuards';
@@ -17,7 +17,6 @@ export default abstract class AbstractSettingsStorage implements IStorage {
 
     init():this {
         this.load();
-        this.updateSaltIfNeeded();
         return this;
     }
 
@@ -48,26 +47,31 @@ export default abstract class AbstractSettingsStorage implements IStorage {
         this.save();
     }
 
-    protected $salt:Int32Array
+    protected $salt:string
     protected $lastUpdated:number
+    protected sessionSalt:Int32Array
+
     getSalt():Int32Array {
-        if (this.$fakingMode === FakingModes.EVERY_TIME) {
-            return this.getRandomSalt();
-        } else {
-            return this.$salt;
+        if (
+            TypeGuards.isUndef(this.$salt) ||
+            this.now() - this.$lastUpdated > this.$updateInterval
+        ) {
+            // Update salt and save it
+            this.updateSalt();
+        } else if (TypeGuards.isUndef(this.sessionSalt)) {
+            // Convert encoded salt string to Int32Array and cache it
+            this.sessionSalt = new Int32Array(4);
+            base64.decode(this.$salt, new Uint8Array(this.sessionSalt.buffer));
         }
+        return this.sessionSalt;
     }
     updateSalt():void {
-        this.$salt = this.getRandomSalt();
+        this.sessionSalt = this.getRandomSalt();
+        this.$salt = base64.encode(new Uint8Array(this.sessionSalt.buffer));
+        this.$lastUpdated = this.now();
+        this.save();
     }
-    private updateSaltIfNeeded():void {
-        if (!this.$salt || (
-            (this.$fakingMode === FakingModes.CONSTANT || this.$fakingMode === FakingModes.PER_DOMAIN ) &&
-            this.now() - this.$lastUpdated > this.$updateInterval
-        )) {
-            this.updateSalt();
-        }
-    }
+
     protected getRandomSalt():Int32Array {
         let buffer = new Uint8Array(new ArrayBuffer(16));
         (window.crypto || window.msCrypto).getRandomValues(buffer);
@@ -105,7 +109,7 @@ export default abstract class AbstractSettingsStorage implements IStorage {
             action: evt.action,
             stack: evt.stack
         };
-        if (domain) { entry.domain = domain; } 
+        if (domain) { entry.domain = domain; }
         this.triggerLog.push(entry);
         switch (evt.api) {
             case Apis.canvas:

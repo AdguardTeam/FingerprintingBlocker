@@ -1,7 +1,7 @@
 import { h, Component, render } from '../../preact'
 import IAlertController from './IAlertController'
 import IStorage, { IGlobalSettingsStorage } from '../../../storage/IStorage'
-import TBlockEvent from '../../../event/BlockEvent'
+import TBlockEvent from '../../../notifier/BlockEvent'
 import IStats from '../../../storage/IStats'
 import { IAlertData } from '../message'
 import Alert from '../components/Alert'

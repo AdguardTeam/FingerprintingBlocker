@@ -1,6 +1,6 @@
 import { h, Component } from '../../preact'
 import { ICommonState } from './Alert'
-import BlockEvent, { Action, getApiName } from '../../../event/BlockEvent'
+import BlockEvent, { Action, getApiName } from '../../../notifier/BlockEvent'
 import * as options from '../../options/radio_input_options'
 import { bind, trustedEventListener } from '../../utils/event_listener_decorators'
 import IStorage from '../../../storage/IStorage'

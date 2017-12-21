@@ -8,12 +8,6 @@
     "block": {
         "message": "Block"
     },
-    "confirm_canvas_msg": {
-        "message": "Will you allow ${domain} to use your HTML5 canvas image data? This may be used to uniquely identify your computer."
-    },
-    "confirm_audio_msg": {
-        "message": "Will you allow ${domain} to use your HTML5 audio sound data? This may be used to uniquely identify your computer."
-    },
     "popup.detected": {
         "message": "Detected"
     },

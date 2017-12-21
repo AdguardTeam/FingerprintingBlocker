@@ -1,6 +1,6 @@
 import AbstractAnonymizer from "../../AbstractAnonymizer";
 import { original } from "../../common_apply_handlers";
-import IAudioBufferCache from "../audio_buffer_tracker/IAudioBufferCache";
+import IAudioBufferCache from "../buffer_cache/IAudioBufferCache";
 import IStorage from "../../../storage/IStorage";
 import INotifier from "../../../notifier/INotifier";
 import IAudioProcessor from "../processor/IAudioProcessor";

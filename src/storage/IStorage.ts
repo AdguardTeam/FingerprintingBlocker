@@ -1,5 +1,5 @@
 import IStats from './IStats';
-import TBlockEvent, { Action } from '../event/BlockEvent';
+import TBlockEvent, { Action } from '../notifier/BlockEvent';
 import FakingModes from './FakingModesEnum';
 
 export default interface IStorage {
@@ -20,8 +20,8 @@ export default interface IStorage {
     /**
      * Methods for noise seeds
      */
-    getSalt():Int32Array
-    updateSalt():void
+    getSalt():Int32Array // Retrieves salt, and calls updateSalt of it was expired.
+    updateSalt():void // We do not provide an interface "setSalt"
 
     /**
      * Methods for trigger logs
@@ -63,5 +63,6 @@ export interface IDomainSettingsStorage extends IStorage {
     getWhitelistedIsModified():boolean
     getFakingModeIsModified():boolean
     getUpdateIntervalIsModified():boolean
+    getSaltIsModified():boolean
     getAnythingIsModified():boolean
 }

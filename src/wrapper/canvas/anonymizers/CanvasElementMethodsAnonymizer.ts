@@ -4,7 +4,7 @@ import IStorage from "../../../storage/IStorage";
 import ICanvasProcessor from "../processor/ICanvasProcessor";
 import ICanvasModeTracker from "../mode_tracker/ICanvasModeTracker";
 import { original } from "../../common_apply_handlers";
-import IApiExecResult from "../../../notifier/IApiExecResult";
+import IApiExecResult from "../../IApiExecResult";
 import * as log from '../../../shared/log';
 import { PixelFakeResult } from "../common_api_exec_results";
 
