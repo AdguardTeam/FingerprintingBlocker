@@ -34,7 +34,7 @@ export default class Alert extends Component<IAlertProps, IAlertState> {
     constructor(props:IAlertProps) {
         super(props);
         const storage = props.storage;
-        const pageToShow = storage.getAnythingIsModified() ? Pages.COLLAPSED : Pages.FIRST_TIME;
+        const pageToShow = storage.getAnythingIsModifiedByUser() ? Pages.COLLAPSED : Pages.FIRST_TIME;
         this.state = {
             action: storage.getAction(),
             notify: storage.getNotify(),

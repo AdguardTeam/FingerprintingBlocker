@@ -108,7 +108,7 @@ export default class DomainSettingsStorage extends AbstractSettingsStorage imple
     getSaltIsModified():boolean {
         return !TypeGuards.isUndef(this.$salt);
     }
-    getAnythingIsModified() {
+    getAnythingIsModifiedByUser() {
         return this.getActionIsModified() ||
             this.getNotifyIsModified() ||
             this.getWhitelistedIsModified() ||

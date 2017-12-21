@@ -64,5 +64,5 @@ export interface IDomainSettingsStorage extends IStorage {
     getFakingModeIsModified():boolean
     getUpdateIntervalIsModified():boolean
     getSaltIsModified():boolean
-    getAnythingIsModified():boolean
+    getAnythingIsModifiedByUser():boolean
 }
