@@ -113,8 +113,7 @@ export default class DomainSettingsStorage extends AbstractSettingsStorage imple
             this.getNotifyIsModified() ||
             this.getWhitelistedIsModified() ||
             this.getFakingModeIsModified() ||
-            this.getUpdateIntervalIsModified() ||
-            this.getSaltIsModified();
+            this.getUpdateIntervalIsModified();
     }
 
     protected loadStat():void {

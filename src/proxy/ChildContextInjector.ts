@@ -24,7 +24,7 @@ export default class ChildContextInjector implements IChildContextInjector {
         private globalKey:string
     ) {
         this.onFrameLoad = this.onFrameLoad.bind(this);
-
+        this.executeCodeOnGet = this.executeCodeOnGet.bind(this);
         // Initialize
         const iframePType = this.$window.HTMLIFrameElement.prototype;
         this.getContentWindow = Object.getOwnPropertyDescriptor(iframePType, 'contentWindow').get;
@@ -35,7 +35,7 @@ export default class ChildContextInjector implements IChildContextInjector {
         proxyService.wrapAccessor(iframePType, 'contentDocument', this.executeCodeOnGet);
     }
 
-    private executeCodeOnGet:ApplyHandler<HTMLIFrameElement, any> = (_get:(this:HTMLIFrameElement)=>any, __this) => {
+    private executeCodeOnGet(_get:(this:HTMLIFrameElement)=>any, __this) {
         let prevDoc = this.frameToDocument.get(__this);
         if (TypeGuards.isUndef(prevDoc)) {
             // New iframe elements
@@ -72,7 +72,6 @@ export default class ChildContextInjector implements IChildContextInjector {
                     }
                 }
             } catch(e) {
-                log.print(`error`, e);
                 this.frameToDocument.set(__this, null);
             }
         }

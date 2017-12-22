@@ -23,7 +23,6 @@ const globalKey = globalSettings.globalKey;
 // See ChildContextInjector implementation.
 if (!window.hasOwnProperty(globalKey)) {
     const proxyService      = new ProxyService();
-    const injector          = new ChildContextInjector(window, proxyService, globalKey);
     const messageHub        = new InterContextMessageHub(window);
     const alertController   = new AlertController(globalSettings);
     const notifier          = new Notifier(messageHub, domainSettings, alertController);
@@ -36,6 +35,11 @@ if (!window.hasOwnProperty(globalKey)) {
     const apiWrapper        = new ApiWrapper(proxyService, domainSettings, notifier, canvasProcessor, canvasModeTracker, audioProcessor, audioBufferCache);
 
     const main = (window:Window) => {
+        // ChildContextInjector is dependent on the context, and it needs to
+        // be initialized on each context.
+        const injector = new ChildContextInjector(window, proxyService, globalKey);
+        injector.registerCallback(inIframe);
+
         proxyService.$apply(window);
         apiWrapper.$apply(window);
     };
@@ -46,8 +50,6 @@ if (!window.hasOwnProperty(globalKey)) {
         // won't directly assign callbacks to this instance.
         new InterContextMessageHub(window, messageHub);
     };
-
-    injector.registerCallback(inIframe);
 
     main(window);
 } else {

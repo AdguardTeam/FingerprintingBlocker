@@ -1,9 +1,11 @@
 /**
- * Not all readout from AudioBuffer instances should be faked.
+ * @fileoverview Not all readout from AudioBuffer instances should be faked.
  * Instead, we process AudioBuffer instances which is obtained via certain apis,
  * which has access to a result of certain operation of WebAudio API.
- * Only such AudioBuffers can provide meaningful fingerprint data; also
- * it covers all the use cases in PoC websites.
+ * Specifically, we process AudioBuffer which was obtained via `AudioProcessingEvent`
+ * which is available in ScriptProcessorNode, or was obtained via 
+ * `OfflineAudioCompletionEvent` which is available via `oncomplete` listener of
+ * OfflineAudioContext.
  */
 export default interface IAudioBufferCache {
     shouldBeProcessed(buffer:AudioBuffer):boolean
