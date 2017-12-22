@@ -1,0 +1,785 @@
+<html>
+    <head>
+        <style>
+body {
+    font-family: "Gotham Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: lighter;
+    font-size: 14px;
+    margin:0px;
+}
+
+.settings__root {
+    margin: auto;
+    max-width: 800px;
+
+}
+.settings__table {
+    display: table;
+}
+
+.settings__row {
+    display: table-row;
+    width: 100%;
+}
+
+.settings__col {
+    display: table-cell;
+    padding: 5px 5px 5px 5px;
+}
+
+</style>
+        <style>
+.select__arrow {
+    border-color: #999 transparent transparent;
+    border-style:solid;
+    border-width:4px 4px 2px;
+    display:inline-block;
+    height:0;
+    width:0;
+    position: absolute;
+    right: 5px;
+    top: 8px;
+}
+.select__input-wrap {
+    position: relative;
+}
+.select__input {
+    width: 100%;
+    padding: 3px;
+}
+.select__options-root {
+    border: 1px solid #999;
+    border-top: none;
+    max-height:200px;
+    overflow-y:scroll;
+}
+.select__option {
+    padding: 3px;
+}
+.select__option:hover{
+    background-color:#eee;
+}
+</style>
+        
+    </head>
+    <body>
+        <script>
+(function () {
+'use strict';
+
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing permissions
+and limitations under the License.
+***************************************************************************** */
+/* global Reflect, Promise */
+
+var extendStatics = Object.setPrototypeOf ||
+    ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+    function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+
+function __extends(d, b) {
+    extendStatics(d, b);
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+}
+
+var h = preact.h;
+var Component = preact.Component;
+var render = preact.render;
+
+/*
+ * Patched, originally from:
+ * base64-arraybuffer
+ * https://github.com/niklasvh/base64-arraybuffer
+ *
+ * Copyright (c) 2012 Niklas von Hertzen
+ * Licensed under the MIT license.
+ */
+var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+var lookup = new Uint8Array(256);
+for (var i = 0; i < chars.length; i++) {
+    lookup[chars.charCodeAt(i)] = i;
+}
+function encode(bytes) {
+    var len = bytes.length, base64 = "";
+    for (var i_1 = 0; i_1 < len; i_1 += 3) {
+        base64 += chars[bytes[i_1] >> 2];
+        base64 += chars[((bytes[i_1] & 3) << 4) | (bytes[i_1 + 1] >> 4)];
+        base64 += chars[((bytes[i_1 + 1] & 15) << 2) | (bytes[i_1 + 2] >> 6)];
+        base64 += chars[bytes[i_1 + 2] & 63];
+    }
+    if ((len % 3) === 2) {
+        base64 = base64.substring(0, base64.length - 1) + "=";
+    }
+    else if (len % 3 === 1) {
+        base64 = base64.substring(0, base64.length - 2) + "==";
+    }
+    return base64;
+}
+function decode(str, bytes) {
+    var len = str.length;
+    var i, p = 0;
+    var encoded1, encoded2, encoded3, encoded4;
+    for (i = 0; i < len; i += 4) {
+        encoded1 = lookup[str.charCodeAt(i)];
+        encoded2 = lookup[str.charCodeAt(i + 1)];
+        encoded3 = lookup[str.charCodeAt(i + 2)];
+        encoded4 = lookup[str.charCodeAt(i + 3)];
+        bytes[p++] = (encoded1 << 2) | (encoded2 >> 4);
+        bytes[p++] = ((encoded2 & 15) << 4) | (encoded3 >> 2);
+        bytes[p++] = ((encoded3 & 3) << 6) | (encoded4 & 63);
+    }
+}
+
+var TypeGuards = /** @class */ (function () {
+    function TypeGuards() {
+    }
+    TypeGuards.toString = Object.prototype.toString;
+    TypeGuards.isUndef = function (obj) {
+        return typeof obj === 'undefined';
+    };
+    TypeGuards.isUint8Array = function (obj) {
+        return TypeGuards.toString.call(obj) === '[object Uint8Array]';
+    };
+    TypeGuards.isFloat32Array = function (obj) {
+        return TypeGuards.toString.call(obj) === '[object Float32Array]';
+    };
+    TypeGuards.isAudioBuffer = function (obj) {
+        return TypeGuards.toString.call(obj) === '[object AudioBuffer]';
+    };
+    TypeGuards.isHTMLElement = function (el) {
+        return 'offsetLeft' in el;
+    };
+    return TypeGuards;
+}());
+
+var AbstractSettingsStorage = /** @class */ (function () {
+    function AbstractSettingsStorage() {
+        this.STATS_PREFIX = 'stats#';
+        this.GLOBAL_SETTINGS_KEY = 'settings';
+        this.now = Date.now;
+    }
+    AbstractSettingsStorage.prototype.init = function () {
+        this.load();
+        return this;
+    };
+    AbstractSettingsStorage.prototype.setAction = function (action) {
+        this.$action = action;
+        this.save();
+    };
+    AbstractSettingsStorage.prototype.setNotify = function (notify) {
+        this.$notify = notify;
+        this.save();
+    };
+    AbstractSettingsStorage.prototype.setWhitelisted = function (whitelisted) {
+        this.$whitelisted = whitelisted;
+        this.save();
+    };
+    AbstractSettingsStorage.prototype.setFakingmode = function (fakingMode) {
+        this.$fakingMode = fakingMode;
+        this.save();
+    };
+    AbstractSettingsStorage.prototype.setUpdateInterval = function (updateInterval) {
+        this.$updateInterval = updateInterval;
+        this.save();
+    };
+    AbstractSettingsStorage.prototype.getSalt = function () {
+        if (TypeGuards.isUndef(this.$salt) ||
+            this.now() - this.$lastUpdated > this.$updateInterval) {
+            // Update salt and save it
+            this.updateSalt();
+        }
+        else if (TypeGuards.isUndef(this.sessionSalt)) {
+            // Convert encoded salt string to Int32Array and cache it
+            this.sessionSalt = new Int32Array(4);
+            decode(this.$salt, new Uint8Array(this.sessionSalt.buffer));
+        }
+        return this.sessionSalt;
+    };
+    AbstractSettingsStorage.prototype.updateSalt = function () {
+        this.sessionSalt = this.getRandomSalt();
+        this.$salt = encode(new Uint8Array(this.sessionSalt.buffer));
+        this.$lastUpdated = this.now();
+        this.save();
+    };
+    AbstractSettingsStorage.prototype.getRandomSalt = function () {
+        var buffer = new Uint8Array(new ArrayBuffer(16));
+        (window.crypto || window.msCrypto).getRandomValues(buffer);
+        return new Int32Array(buffer.buffer);
+    };
+    AbstractSettingsStorage.prototype.getTriggerLog = function () {
+        if (TypeGuards.isUndef(this.triggerLog))
+            this.loadStat();
+        return this.triggerLog;
+    };
+    AbstractSettingsStorage.prototype.getStat = function () {
+        if (TypeGuards.isUndef(this.stats))
+            this.loadStat();
+        return this.stats;
+    };
+    AbstractSettingsStorage.prototype.appendEvent = function (evt, domain) {
+        if (TypeGuards.isUndef(this.triggerLog))
+            this.loadStat();
+        var entry = {
+            date: this.now(),
+            api: evt.api,
+            type: evt.type,
+            action: evt.action,
+            stack: evt.stack
+        };
+        if (domain) {
+            entry.domain = domain;
+        }
+        this.triggerLog.push(entry);
+        switch (evt.api) {
+            case 0 /* canvas */:
+                this.stats.canvasBlockCount++;
+                break;
+            case 1 /* audio */:
+                this.stats.audioBlockCount++;
+                break;
+        }
+        this.saveStat();
+    };
+    AbstractSettingsStorage.prototype.enumerateDomains = function () {
+        var _this = this;
+        var keys = GM_listValues();
+        return keys.filter(function (key) {
+            return key !== _this.GLOBAL_SETTINGS_KEY &&
+                key.indexOf(_this.STATS_PREFIX) !== 0;
+        });
+    };
+    return AbstractSettingsStorage;
+}());
+
+var DomainSettingsStorage = /** @class */ (function (_super) {
+    __extends(DomainSettingsStorage, _super);
+    function DomainSettingsStorage(domain, globalSettings) {
+        var _this = _super.call(this) || this;
+        _this.domain = domain;
+        _this.globalSettings = globalSettings;
+        return _this;
+    }
+    DomainSettingsStorage.prototype.load = function () {
+        var domainSettingsStringified = GM_getValue(this.domain);
+        if (TypeGuards.isUndef(domainSettingsStringified)) {
+            return;
+        }
+        var domainSettings = JSON.parse(domainSettingsStringified);
+        this.$action = domainSettings.action;
+        this.$notify = domainSettings.notify;
+        this.$whitelisted = domainSettings.whitelisted;
+        this.$fakingMode = domainSettings.fakingMode;
+        this.$updateInterval = domainSettings.updateInterval;
+        this.$salt = domainSettings.salt;
+        this.$lastUpdated = domainSettings.lastUpdated;
+    };
+    DomainSettingsStorage.prototype.save = function () {
+        var domainSettings = {};
+        var hasSpecificSettings = false;
+        if (!TypeGuards.isUndef(this.$action)) {
+            hasSpecificSettings = true;
+            domainSettings.action = this.$action;
+        }
+        if (!TypeGuards.isUndef(this.$notify)) {
+            hasSpecificSettings = true;
+            domainSettings.notify = this.$notify;
+        }
+        if (!TypeGuards.isUndef(this.$whitelisted)) {
+            hasSpecificSettings = true;
+            domainSettings.whitelisted = this.$whitelisted;
+        }
+        if (!TypeGuards.isUndef(this.$fakingMode)) {
+            hasSpecificSettings = true;
+            domainSettings.fakingMode = this.$fakingMode;
+        }
+        if (!TypeGuards.isUndef(this.$updateInterval)) {
+            hasSpecificSettings = true;
+            domainSettings.updateInterval = this.$updateInterval;
+        }
+        if (!TypeGuards.isUndef(this.$salt)) {
+            hasSpecificSettings = true;
+            domainSettings.salt = this.$salt;
+            domainSettings.lastUpdated = this.$lastUpdated;
+        }
+        if (hasSpecificSettings) {
+            GM_setValue(this.domain, JSON.stringify(domainSettings));
+        }
+    };
+    DomainSettingsStorage.prototype.getAction = function () {
+        return this.getActionIsModified() ? this.$action : this.globalSettings.getAction();
+    };
+    DomainSettingsStorage.prototype.getActionIsModified = function () {
+        return !TypeGuards.isUndef(this.$action);
+    };
+    DomainSettingsStorage.prototype.getNotify = function () {
+        return this.getNotifyIsModified() ? this.$notify : this.globalSettings.getNotify();
+    };
+    DomainSettingsStorage.prototype.getNotifyIsModified = function () {
+        return !TypeGuards.isUndef(this.$notify);
+    };
+    DomainSettingsStorage.prototype.getWhitelisted = function () {
+        return this.getWhitelistedIsModified() ? this.$whitelisted : this.globalSettings.getWhitelisted();
+    };
+    DomainSettingsStorage.prototype.getWhitelistedIsModified = function () {
+        return !TypeGuards.isUndef(this.$whitelisted);
+    };
+    DomainSettingsStorage.prototype.getFakingMode = function () {
+        return this.getFakingModeIsModified() ? this.$fakingMode : this.globalSettings.getFakingMode();
+    };
+    DomainSettingsStorage.prototype.getFakingModeIsModified = function () {
+        return !TypeGuards.isUndef(this.$fakingMode);
+    };
+    DomainSettingsStorage.prototype.getUpdateInterval = function () {
+        return this.getUpdateIntervalIsModified() ? this.$updateInterval : this.globalSettings.getUpdateInterval();
+    };
+    DomainSettingsStorage.prototype.getUpdateIntervalIsModified = function () {
+        return !TypeGuards.isUndef(this.$updateInterval);
+    };
+    DomainSettingsStorage.prototype.getSalt = function () {
+        var fakingMode = this.getFakingMode();
+        if (fakingMode === 0 /* EVERY_TIME */) {
+            return this.getRandomSalt();
+        }
+        if (fakingMode === 3 /* CONSTANT */) {
+            return this.globalSettings.getSalt(); // Get default salt
+        }
+        if (fakingMode === 1 /* PER_SESSION */) {
+            if (TypeGuards.isUndef(this.sessionSalt)) {
+                this.sessionSalt = this.getRandomSalt();
+            }
+            return this.sessionSalt;
+        }
+        // In case of PER_DOMAIN, extract salt from `this.$salt`.
+        return _super.prototype.getSalt.call(this);
+    };
+    DomainSettingsStorage.prototype.getSaltIsModified = function () {
+        return !TypeGuards.isUndef(this.$salt);
+    };
+    DomainSettingsStorage.prototype.getAnythingIsModifiedByUser = function () {
+        return this.getActionIsModified() ||
+            this.getNotifyIsModified() ||
+            this.getWhitelistedIsModified() ||
+            this.getFakingModeIsModified() ||
+            this.getUpdateIntervalIsModified();
+    };
+    DomainSettingsStorage.prototype.loadStat = function () {
+        this.triggerLog = [];
+        var statsStringified = GM_getValue(this.STATS_PREFIX + this.domain);
+        if (!TypeGuards.isUndef(statsStringified)) {
+            var stats = JSON.parse(statsStringified);
+            this.stats = {
+                canvasBlockCount: stats.canvas,
+                audioBlockCount: stats.audio
+            };
+        }
+        else {
+            this.stats = {
+                canvasBlockCount: 0,
+                audioBlockCount: 0
+            };
+        }
+    };
+    DomainSettingsStorage.prototype.saveStat = function () {
+        if (this.stats.canvasBlockCount === 0 && this.stats.audioBlockCount === 0) {
+            return;
+        }
+        var stats = {
+            canvas: this.stats.canvasBlockCount,
+            audio: this.stats.audioBlockCount
+        };
+        GM_setValue(this.STATS_PREFIX + this.domain, JSON.stringify(stats));
+    };
+    return DomainSettingsStorage;
+}(AbstractSettingsStorage));
+
+var GlobalSettingsStorage = /** @class */ (function (_super) {
+    __extends(GlobalSettingsStorage, _super);
+    function GlobalSettingsStorage() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    GlobalSettingsStorage.prototype.load = function () {
+        var globalSettingsStringified = GM_getValue(this.GLOBAL_SETTINGS_KEY);
+        if (!TypeGuards.isUndef(globalSettingsStringified)) {
+            var globalSettings = JSON.parse(globalSettingsStringified);
+            this.$action = globalSettings.defaultAction;
+            this.$notify = globalSettings.defaultNotify;
+            this.$whitelisted = globalSettings.defaultWhitelisted;
+            this.$fakingMode = globalSettings.defaultFakingMode;
+            this.$updateInterval = globalSettings.defaultUpdateInterval;
+            this.globalKey = globalSettings.iframeKey;
+            this.$salt = globalSettings.defaultSalt;
+            this.$lastUpdated = globalSettings.lastUpdated;
+        }
+        else {
+            this.$action = GlobalSettingsStorage.DEFAULT_ACTION;
+            this.$notify = GlobalSettingsStorage.DEFAULT_NOTIFY;
+            this.$whitelisted = GlobalSettingsStorage.DEFAULT_WHITELISTED;
+            this.$fakingMode = GlobalSettingsStorage.DEFAULT_FAKING_MODE;
+            this.$updateInterval = GlobalSettingsStorage.DEFAULT_UPDATE_INTERVAL;
+            this.$salt = encode(new Uint8Array(this.getRandomSalt().buffer));
+            this.$lastUpdated = this.now();
+            this.globalKey = encode(new Uint8Array(this.getRandomSalt().buffer));
+            this.save();
+        }
+    };
+    GlobalSettingsStorage.prototype.save = function () {
+        var globalSettings = {
+            defaultAction: this.$action,
+            defaultNotify: this.$notify,
+            defaultWhitelisted: this.$whitelisted,
+            defaultFakingMode: this.$fakingMode,
+            defaultUpdateInterval: this.$updateInterval,
+            defaultSalt: this.$salt,
+            lastUpdated: this.now(),
+            iframeKey: this.globalKey
+        };
+        GM_setValue(this.GLOBAL_SETTINGS_KEY, JSON.stringify(globalSettings));
+    };
+    GlobalSettingsStorage.prototype.getAction = function () {
+        return this.$action;
+    };
+    GlobalSettingsStorage.prototype.getNotify = function () {
+        return this.$notify;
+    };
+    GlobalSettingsStorage.prototype.getWhitelisted = function () {
+        return this.$whitelisted;
+    };
+    GlobalSettingsStorage.prototype.getFakingMode = function () {
+        return this.$fakingMode;
+    };
+    GlobalSettingsStorage.prototype.getUpdateInterval = function () {
+        return this.$updateInterval;
+    };
+    GlobalSettingsStorage.prototype.loadStat = function () {
+        var _this = this;
+        var domains = this.enumerateDomains();
+        this.triggerLog = [];
+        this.stats = domains.map(function (domain) {
+            return GM_getValue(_this.STATS_PREFIX + domain);
+        }).reduce(function (prev, current) {
+            prev.canvasBlockCount += current.canvas;
+            prev.audioBlockCount += current.audio;
+        }, {
+            canvasBlockCount: 0,
+            audioBlockCount: 0
+        });
+    };
+    GlobalSettingsStorage.prototype.saveStat = function () { }; // Does nothing
+    GlobalSettingsStorage.prototype.getDomainStorage = function (domain) {
+        if (TypeGuards.isUndef(this.domainStorageMap)) {
+            this.domainStorageMap = Object.create(null);
+        }
+        var domainStorage = this.domainStorageMap[domain];
+        if (TypeGuards.isUndef(domainStorage)) {
+            domainStorage = this.domainStorageMap[domain] = new DomainSettingsStorage(domain, this);
+            domainStorage.init();
+        }
+        return domainStorage;
+    };
+    // Default global settings
+    GlobalSettingsStorage.DEFAULT_ACTION = 0 /* ALLOW */;
+    GlobalSettingsStorage.DEFAULT_NOTIFY = true;
+    GlobalSettingsStorage.DEFAULT_WHITELISTED = false;
+    GlobalSettingsStorage.DEFAULT_FAKING_MODE = 2 /* PER_DOMAIN */;
+    // Time interval for hash update, in milliseconds.
+    GlobalSettingsStorage.DEFAULT_UPDATE_INTERVAL = 24 * 60 * 60 * 1000;
+    return GlobalSettingsStorage;
+}(AbstractSettingsStorage));
+
+var reHostname = new RegExp("^"
+    + "(?:(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)"
+    + "(?:\\.(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)*"
+    + "(?:\\.(?:[a-z\\u00a1-\\uffff]{2,}))"
+    + "\\.?"
+    + "$", "i");
+/**
+ * User actions that affects states:
+ *  - clicking on the input box
+ *    - open options
+ *  - losing focus of the input box:
+ *    - close options
+ *  - clicking on the arrow
+ *    - open options
+ *  - clicking on an input option:
+ *    - set inputValue to the selected option's value
+ *    - close the options
+ *  - clicking on an option to create a new option:
+ *    - set inputValue to the seleced option's value
+ */
+var Select = /** @class */ (function (_super) {
+    __extends(Select, _super);
+    function Select(props) {
+        var _this = _super.call(this, props) || this;
+        _this.state = {
+            inputValue: props.initialValue,
+            currentOptions: props.options.slice(),
+            optionIsOpened: false
+        };
+        _this.onOptionClick = _this.onOptionClick.bind(_this);
+        _this.onInputClick = _this.onInputClick.bind(_this);
+        _this.onArrowClick = _this.onArrowClick.bind(_this);
+        _this.onInputBlur = _this.onInputBlur.bind(_this);
+        return _this;
+    }
+    Select.prototype.onOptionClick = function (evt) {
+        var target = evt.target;
+        if (!TypeGuards.isHTMLElement(target)) {
+            return;
+        }
+        var value = target.getAttribute('data-value');
+        this.onOptionSelect(value);
+    };
+    Select.prototype.onOptionSelect = function (value) {
+        var state = this.state;
+        var inputValue;
+        if (value === 'create') {
+            // Create new option entry
+            inputValue = state.inputValue;
+            var prevOptions = state.currentOptions;
+            this.setState({
+                inputValue: inputValue,
+                currentOptions: [inputValue].concat(prevOptions),
+                optionIsOpened: false
+            });
+        }
+        else {
+            inputValue = value;
+            this.setState({
+                inputValue: inputValue,
+                optionIsOpened: false
+            });
+        }
+        this.props.onChange(inputValue);
+    };
+    Select.prototype.getMatchingOptions = function () {
+        var state = this.state;
+        var currentOptions = state.currentOptions;
+        var inputValue = state.inputValue;
+        if (inputValue.length === 0) {
+            return currentOptions;
+        }
+        var props = this.props;
+        var confArr = [];
+        var i = 0, l = currentOptions.length;
+        for (; i < l; i++) {
+            confArr.push({
+                index: i,
+                confidence: props.calculateConfidence(currentOptions[i], inputValue)
+            });
+        }
+        confArr = confArr.sort(function (a, b) {
+            return b.confidence - a.confidence;
+        });
+        for (i = 0; i < l; i++) {
+            if (confArr[i].confidence < props.confidenceThreshold) {
+                break;
+            }
+        }
+        l = i;
+        confArr.splice(i, l);
+        var result = [];
+        for (i = 0; i < l; i++) {
+            result.push(currentOptions[confArr[i].index]);
+        }
+        return result;
+    };
+    Select.prototype.onInputChange = function (value) {
+        this.setState({
+            inputValue: value,
+        });
+    };
+    Select.prototype.onInputClick = function () {
+        this.setState({
+            optionIsOpened: true
+        });
+    };
+    Select.prototype.onArrowClick = function () {
+        this.setState({
+            optionIsOpened: !this.state.optionIsOpened
+        });
+    };
+    Select.prototype.onInputBlur = function () {
+        if (this.state.currentOptions.indexOf(this.state.inputValue) !== -1) {
+            this.setState({
+                optionIsOpened: false
+            });
+        }
+    };
+    Select.prototype.render = function (props, state) {
+        var _this = this;
+        var inputValue = state.inputValue;
+        var shouldOfferCreatingOption = state.currentOptions.indexOf(inputValue) === -1 && reHostname.test(inputValue);
+        return (h("div", { class: "select__root" },
+            h("div", { class: "select__input-wrap" },
+                h("input", { type: "text", class: "select__input", value: state.inputValue, onKeyUp: function (evt) {
+                        _this.onInputChange(evt.currentTarget.value);
+                    }, onClick: this.onInputClick, onBlur: this.onInputBlur }),
+                h("div", { class: "select__arrow", onClick: this.onArrowClick })),
+            state.optionIsOpened && h("div", { class: "select__options-root", onClick: this.onOptionClick },
+                shouldOfferCreatingOption ? h("div", { class: "select__option select__option-create", key: '', "data-value": "create" }, props.getCreateMessage(inputValue)) : null,
+                this.getMatchingOptions().map(function (option, index) {
+                    return (h("div", { class: "select__option", key: option, "data-value": option }, option));
+                }))));
+    };
+    return Select;
+}(Component));
+
+function RadioInputGroup(props) {
+    return (h("div", null, props.options.map(function (option) {
+        return h("label", { key: String(option.id) },
+            h("input", { type: "radio", checked: props.selected === option.id, onClick: function (evt) {
+                    if (evt.isTrusted) {
+                        props.onRadioInputClick(option.id);
+                    }
+                } }),
+            h("span", null, option.label));
+    })));
+}
+
+var ACTION_OPTIONS = [
+    { id: 0 /* ALLOW */, label: "Allow" },
+    { id: 1 /* FAKE */, label: "Fake" },
+    { id: 2 /* BLOCK */, label: "Block" }
+];
+var SHOW_OPTIONS = [
+    { id: true, label: 'Show' },
+    { id: false, label: 'Don\'t show' }
+];
+var WHITELIST_OPTIONS = [
+    { id: true, label: 'true' },
+    { id: false, label: 'false' }
+];
+var FAKING_MODE_OPTIONS = [
+    { id: 0 /* EVERY_TIME */, label: "everytime" },
+    { id: 1 /* PER_SESSION */, label: "per session" },
+    { id: 2 /* PER_DOMAIN */, label: "per domain" },
+    { id: 3 /* CONSTANT */, label: "constant" }
+];
+
+var GlobalSettings = /** @class */ (function (_super) {
+    __extends(GlobalSettings, _super);
+    function GlobalSettings(props) {
+        var _this = _super.call(this, props) || this;
+        var domains = props.storage.enumerateDomains();
+        domains.unshift(GlobalSettings.DEFAULT_SETTINGS_LABEL);
+        _this.state = {
+            domainOptions: domains,
+        };
+        _this.onActionChange = _this.onActionChange.bind(_this);
+        _this.onNotifyChange = _this.onNotifyChange.bind(_this);
+        _this.onWhitelistedChange = _this.onWhitelistedChange.bind(_this);
+        _this.onFakingModechange = _this.onFakingModechange.bind(_this);
+        _this.onDomainSelectionChange = _this.onDomainSelectionChange.bind(_this);
+        return _this;
+    }
+    GlobalSettings.prototype.onActionChange = function (action) {
+        this.props.storage.setAction(action);
+        this.setState({});
+    };
+    GlobalSettings.prototype.onNotifyChange = function (notify) {
+        this.props.storage.setNotify(notify);
+        this.setState({});
+    };
+    GlobalSettings.prototype.onWhitelistedChange = function (whitelisted) {
+        this.props.storage.setWhitelisted(whitelisted);
+        this.setState({});
+    };
+    GlobalSettings.prototype.onFakingModechange = function (fakingMode) {
+        this.props.storage.setFakingmode(fakingMode);
+        this.setState({});
+    };
+    GlobalSettings.prototype.onDomainSelectionChange = function (value) {
+        this.props.onDomainChange(value);
+    };
+    GlobalSettings.prototype.render = function (props, state) {
+        var fakingMode = props.storage.getFakingMode();
+        var updateIntervalIsApplicable = fakingMode === 3 /* CONSTANT */ || fakingMode === 2;
+        return (h("div", { class: "settings__root" },
+            h("div", null,
+                "Settings for:",
+                h(Select, { initialValue: props.storage.domain || GlobalSettings.DEFAULT_SETTINGS_LABEL, onChange: this.onDomainSelectionChange, options: state.domainOptions, calculateConfidence: function (given, against) {
+                        return given.startsWith(against) ? 1 : 0;
+                    }, confidenceThreshold: 1, getCreateMessage: function (input) {
+                        return "Create settings for a domain " + input;
+                    } })),
+            h("div", { class: "settings__table" },
+                h("div", { class: "settings__row" },
+                    h("div", { class: "settings__label settings__col" }, "Action:"),
+                    h("div", { class: "settings__col" },
+                        h(RadioInputGroup, { options: ACTION_OPTIONS, selected: props.storage.getAction(), onRadioInputClick: this.onActionChange }))),
+                h("div", { class: "settings__row" },
+                    h("div", { class: "settings__label settings__col" }, "Notification"),
+                    h("div", { class: "settings__col" },
+                        h(RadioInputGroup, { options: SHOW_OPTIONS, selected: props.storage.getNotify(), onRadioInputClick: this.onNotifyChange }))),
+                h("div", { class: "settings__row" },
+                    h("div", { class: "settings__label settings__col" }, "Whitelist"),
+                    h("div", { class: "settings__col" },
+                        h(RadioInputGroup, { options: WHITELIST_OPTIONS, selected: props.storage.getWhitelisted(), onRadioInputClick: this.onWhitelistedChange }))),
+                h("div", { class: "settings__row" },
+                    h("div", { class: "settings__label settings__col" }, "Salt renewal policy"),
+                    h("div", { class: "settings__col" },
+                        h(RadioInputGroup, { options: FAKING_MODE_OPTIONS, selected: fakingMode, onRadioInputClick: this.onFakingModechange }))),
+                updateIntervalIsApplicable && h("div", { class: "settings__row" },
+                    h("div", { class: "settings__label settings__col" }, "update Interval"),
+                    h("div", { class: "settings__col" },
+                        h("input", { type: "text", value: String(props.storage.getUpdateInterval()) }))))));
+    };
+    GlobalSettings.DEFAULT_SETTINGS_LABEL = "Default settings";
+    return GlobalSettings;
+}(Component));
+
+var reDomain = /^\?d\=([^&]+)$/;
+function getDomainFromUrlQueryParam() {
+    var match = reDomain.exec(location.search);
+    if (match) {
+        return match[1];
+    }
+}
+var App = /** @class */ (function (_super) {
+    __extends(App, _super);
+    function App(props) {
+        var _this = _super.call(this, props) || this;
+        var domain = getDomainFromUrlQueryParam();
+        if (!domain) {
+            domain = GlobalSettings.DEFAULT_SETTINGS_LABEL;
+        }
+        _this.state = {
+            currentDomain: domain
+        };
+        _this.globalStorage = new GlobalSettingsStorage().init();
+        _this.onDomainChange = _this.onDomainChange.bind(_this);
+        return _this;
+    }
+    App.prototype.onDomainChange = function (domain) {
+        if (domain) {
+            this.setState({
+                currentDomain: domain
+            });
+        }
+    };
+    App.prototype.render = function () {
+        var domain = this.state.currentDomain;
+        var currentStorage = domain === GlobalSettings.DEFAULT_SETTINGS_LABEL ? this.globalStorage : this.globalStorage.getDomainStorage(domain);
+        return (h(GlobalSettings, { storage: currentStorage, onDomainChange: this.onDomainChange }));
+    };
+    return App;
+}(Component));
+
+render(h(App, null), document.body);
+
+}());
+
+</script>
+    </body>
+</html>
